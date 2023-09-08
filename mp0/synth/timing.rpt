@@ -1,0 +1,59 @@
+ 
+****************************************
+Report : timing
+        -path full
+        -delay max
+        -max_paths 1
+Design : mp0
+Version: R-2020.09-SP4
+Date   : Fri Sep  8 07:52:09 2023
+****************************************
+
+Operating Conditions: typical   Library: NangateOpenCellLibrary
+Wire Load Model Mode: top
+
+  Startpoint: src_a[3] (input port clocked by my_clk)
+  Endpoint: reg_a[0] (output port clocked by my_clk)
+  Path Group: my_clk
+  Path Type: max
+
+  Des/Clust/Port     Wire Load Model       Library
+  ------------------------------------------------
+  mp0                5K_hvratio_1_1        NangateOpenCellLibrary
+
+  Point                                    Incr       Path
+  -----------------------------------------------------------
+  clock my_clk (rise edge)                 0.00       0.00
+  clock network delay (ideal)              0.00       0.00
+  input external delay                     1.00       1.00 r
+  src_a[3] (in)                            0.00       1.00 r
+  U28/Z (BUF_X1)                           0.17       1.17 r
+  rf/src_a[3] (regfile)                    0.00       1.17 r
+  rf/U860/Z (BUF_X1)                       0.10       1.27 r
+  rf/U580/ZN (INV_X1)                      0.03       1.30 f
+  rf/U470/Z (BUF_X1)                       0.05       1.35 f
+  rf/U2926/ZN (AND2_X1)                    0.05       1.40 f
+  rf/U11/Z (BUF_X1)                        0.04       1.43 f
+  rf/U221/Z (BUF_X1)                       0.07       1.50 f
+  rf/U2927/ZN (AOI22_X1)                   0.07       1.57 r
+  rf/U2931/ZN (NAND4_X1)                   0.05       1.62 f
+  rf/U2944/ZN (AOI222_X1)                  0.07       1.69 r
+  rf/U630/ZN (INV_X1)                      0.02       1.71 f
+  rf/U629/ZN (AND2_X1)                     0.03       1.74 f
+  rf/reg_a[0] (regfile)                    0.00       1.74 f
+  reg_a[0] (out)                           0.00       1.74 f
+  data arrival time                                   1.74
+
+  clock my_clk (rise edge)                10.00      10.00
+  clock network delay (ideal)              0.00      10.00
+  clock uncertainty                       -0.10       9.90
+  output external delay                   -1.00       8.90
+  data required time                                  8.90
+  -----------------------------------------------------------
+  data required time                                  8.90
+  data arrival time                                  -1.74
+  -----------------------------------------------------------
+  slack (MET)                                         7.16
+
+
+1

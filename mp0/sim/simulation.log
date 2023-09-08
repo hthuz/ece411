@@ -1,0 +1,82 @@
+Command: /home/hz66/ece411/mp0/sim/./simv -l simulation.log
+Chronologic VCS simulator copyright 1991-2020
+Contains Synopsys proprietary information.
+Compiler version R-2020.12-SP1-1_Full64; Runtime version R-2020.12-SP1-1_Full64;  Sep  8 07:46 2023
+*Verdi* Loading libsscore_vcs202012.so
+FSDB Dumper for VCS, Release Verdi_R-2020.12-SP1-1, Linux x86_64/64bit, 04/20/2021
+(C) 1996 - 2021 by Synopsys, Inc.
+*Verdi* : Create FSDB file 'dump.fsdb'
+*Verdi* : Begin traversing the scopes, layer (0).
+*Verdi* : End of traversing.
+Starting simulation.
+reg 01: 00000000
+reg 02: 00000000
+reg 03: 00000000
+reg 04: 00000000
+reg 05: 00000000
+reg 06: 00000000
+reg 07: 00000000
+reg 08: 00000000
+reg 09: 00000000
+reg 0a: 00000000
+reg 0b: 00000000
+reg 0c: 00000000
+reg 0d: 00000000
+reg 0e: 00000000
+reg 0f: 00000000
+reg 10: 00000000
+reg 11: 00000000
+reg 12: 00000000
+reg 13: 00000000
+reg 14: 00000000
+reg 15: 00000000
+reg 16: 00000000
+reg 17: 00000000
+reg 18: 00000000
+reg 19: 00000000
+reg 1a: 00000000
+reg 1b: 00000000
+reg 1c: 00000000
+reg 1d: 00000000
+reg 1e: 00000000
+reg 1f: 00000000
+Writing to regfile...
+Wrote to regfile.
+reg 01: 00000001
+reg 02: 00000002
+reg 03: 00000003
+reg 04: 00000004
+reg 05: 00000005
+reg 06: 00000006
+reg 07: 00000007
+reg 08: 00000008
+reg 09: 00000009
+reg 0a: 0000000a
+reg 0b: 0000000b
+reg 0c: 0000000c
+reg 0d: 0000000d
+reg 0e: 0000000e
+reg 0f: 0000000f
+reg 10: 00000010
+reg 11: 00000011
+reg 12: 00000012
+reg 13: 00000013
+reg 14: 00000014
+reg 15: 00000015
+reg 16: 00000016
+reg 17: 00000017
+reg 18: 00000018
+reg 19: 00000019
+reg 1a: 0000001a
+reg 1b: 0000001b
+reg 1c: 0000001c
+reg 1d: 0000001d
+reg 1e: 0000001e
+reg 1f: 0000001f
+$finish called from file "/home/hz66/ece411/mp0/hvl/mp0_tb.sv", line 65.
+Ending simulation.
+$finish at simulation time                34000
+           V C S   S i m u l a t i o n   R e p o r t 
+Time: 340000 ps
+CPU Time:      0.390 seconds;       Data structure size:   0.0Mb
+Fri Sep  8 07:46:01 2023
