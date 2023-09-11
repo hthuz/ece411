@@ -46,19 +46,36 @@ endfunction : report_error
 
 initial itf.reset_n = 1'b0;
 initial begin
+    assert (itf.reset_n == 1'b0)
     reset();
     /********************** Your Code Here *****************************/
-    itf.multiplier_i <= 16;
-    itf.multiplicand_i <= 32;
-    itf.start_i <= 1'b1;
-    @(tb_clk);
 
-    assert (itf.product_o == itf.multiplicand_i * itf.multiplier_i)
+    assert (itf.rdy == 1'b1)
     else begin
-        $error("%0d: %0t: BAD_PRODUCT error detected", `__LINE__, $time);
-        report_error (BAD_PRODUCT);
+        $error("%0d: %0t: NOT_READY error detected", `__LINE__, $time);
+        report_error (NOT_READY);
     end
 
+    for(int i = 0; i < 256; i++) begin
+        for(int j = 0; j < 256; j++) begin
+            itf.multiplier <= i;
+            itf.multiplicand <= j;
+            itf.start <= 1'b1;
+            @(tb_clk iff itf.done == 1'b1 );
+
+            assert (itf.rdy == 1'b1)
+            else begin
+                $error("%0d: %0t: NOT_READY error detected", `__LINE__, $time);
+                report_error (NOT_READY);
+            end
+
+            assert (itf.product == i * j)
+            else begin
+                $error("%0d: %0t: BAD_PRODUCT error detected", `__LINE__, $time);
+                report_error (BAD_PRODUCT);
+            end
+        end
+    end
 
 
     /*******************************************************************/
@@ -70,3 +87,4 @@ end
 
 endmodule : testbench
 `endif
+ 
