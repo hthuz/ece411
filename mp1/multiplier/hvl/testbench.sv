@@ -48,6 +48,17 @@ initial itf.reset_n = 1'b0;
 initial begin
     reset();
     /********************** Your Code Here *****************************/
+    itf.multiplier_i <= 16;
+    itf.multiplicand_i <= 32;
+    itf.start_i <= 1'b1;
+    @(tb_clk);
+
+    assert (itf.product_o == itf.multiplicand_i * itf.multiplier_i)
+    else begin
+        $error("%0d: %0t: BAD_PRODUCT error detected", `__LINE__, $time);
+        report_error (BAD_PRODUCT);
+    end
+
 
 
     /*******************************************************************/
