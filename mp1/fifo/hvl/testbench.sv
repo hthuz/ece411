@@ -57,7 +57,7 @@ initial begin
 
     // Enque coverage
     itf.valid_i <= 1'b1;
-    for (int i = 0; i < 3; i++) begin
+    for (int i = 0; i < CAP_P; i++) begin
         itf.data_i <= i;
         @(tb_clk);
         assert (itf.rdy == 1'b1);
@@ -66,7 +66,7 @@ initial begin
 
     // Deque converage
     itf.yumi <= 1'b1;
-    for (int i = 0; i < 3; i++) begin
+    for (int i = 0; i < CAP_P; i++) begin
         assert(itf.valid_o == 1'b1);
         assert(itf.data_o == i)
             else begin
@@ -80,7 +80,7 @@ initial begin
 
 
     // Both coverage
-    for(int i = 1; i < 10; i++) begin
+    for(int i = 1; i < CAP_P; i++) begin
         
         reset();
         @(tb_clk);
@@ -95,12 +95,13 @@ initial begin
         for(int j = 0; j < i; j++) begin
             itf.data_i <= j;
             @(tb_clk);
+            assert (itf.rdy == 1'b1);
         end
 
         // Enque and deque simultaneously for one time
         itf.yumi <= 1'b1;
-        // // assert(itf.rdy == 1'b1);
-        // // assert(itf.valid_o == 1'b1);
+        assert(itf.rdy == 1'b1);
+        assert(itf.valid_o == 1'b1);
         assert(itf.data_o == 0)
             else begin
                 error_e err = INCORRECT_DATA_O_ON_YUMI_I;
