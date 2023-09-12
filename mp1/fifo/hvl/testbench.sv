@@ -46,6 +46,69 @@ initial begin
     /************************ Your Code Here ***********************/
     // Feel free to make helper tasks / functions, initial / always blocks, etc.
 
+    // Assert ready after reset
+    @(tb_clk);
+    assert(itf.rdy == 1'b1)
+        else begin
+            error_e err = RESET_DOES_NOT_CAUSE_READY_O;
+            $error ("%0d: %0t: %s error detected", `__LINE__, $time, err.name);
+            report_error (err);
+        end
+
+    // Enque coverage
+    itf.valid_i <= 1'b1;
+    for (int i = 0; i < 10; i++) begin
+        itf.data_i <= i;
+        @(tb_clk);
+        assert (itf.rdy == 1'b1);
+    end
+    itf.valid_i <= 1'b0;
+
+    // Deque converage
+    itf.yumi <= 1'b1;
+    for (int i = 0; i < 10; i++) begin
+        assert(itf.valid_o == 1'b1);
+        assert(itf.data_o == i)
+            else begin
+                error_e err = INCORRECT_DATA_O_ON_YUMI_I;
+                $error ("%0d: %0t: %s error detected", `__LINE__, $time, err.name);
+                report_error (err);
+            end
+        @(tb_clk);
+    end
+    itf.yumi <= 1'b0;
+
+    // Both coverage
+    reset();
+    @(tb_clk);
+    assert(itf.rdy == 1'b1)
+        else begin
+            error_e err = RESET_DOES_NOT_CAUSE_READY_O;
+            $error ("%0d: %0t: %s error detected", `__LINE__, $time, err.name);
+            report_error (err);
+        end
+
+    for (int i = 1; i < 10; i++) begin
+        itf.valid_i <= 1'b1;
+        itf.data_i <= i;
+        itf.yumi <= 1'b1;
+        @(tb_clk);
+        // assert(itf.rdy == 1'b1);
+        // assert(itf.valid_o == 1'b1);
+        assert(itf.data_o == i)
+            else begin
+                error_e err = INCORRECT_DATA_O_ON_YUMI_I;
+                $error ("%0d: %0t: %s error detected", `__LINE__, $time, err.name);
+                report_error (err);
+            end
+    end
+    itf.valid_i <= 1'b0;
+    itf.yumi <= 1'b0;
+
+
+
+
+
 
     /***************************************************************/
     // Make sure your test bench exits by calling itf.finish();
