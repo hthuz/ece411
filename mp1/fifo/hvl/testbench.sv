@@ -78,42 +78,39 @@ initial begin
     end
     itf.yumi <= 1'b0;
 
+
     // Both coverage
-    reset();
-    @(tb_clk);
-    assert(itf.rdy == 1'b1)
-        else begin
-            error_e err = RESET_DOES_NOT_CAUSE_READY_O;
-            $error ("%0d: %0t: %s error detected", `__LINE__, $time, err.name);
-            report_error (err);
+    for(int i = 1; i < 10; i++) begin
+        
+        reset();
+        @(tb_clk);
+        assert(itf.rdy == 1'b1)
+            else begin
+                error_e err = RESET_DOES_NOT_CAUSE_READY_O;
+                $error ("%0d: %0t: %s error detected", `__LINE__, $time, err.name);
+                report_error (err);
+            end
+        // Load i elements
+        itf.valid_i <= 1'b1;
+        for(int j = 0; j < i; j++) begin
+            itf.data_i <= j;
+            @(tb_clk);
         end
 
-    // Add One element
-    itf.valid_i <= 1'b1;
-    itf.data_i <= 0;
-    @(tb_clk);
-    itf.valid_i <= 1'b0;
-
-    for (int i = 1; i < 3; i++) begin
-        itf.valid_i <= 1'b1;
-        itf.data_i <= i;
+        // Enque and deque simultaneously for one time
         itf.yumi <= 1'b1;
-        @(tb_clk);
-        // assert(itf.rdy == 1'b1);
-        // assert(itf.valid_o == 1'b1);
-        assert(itf.data_o == i)
+        // // assert(itf.rdy == 1'b1);
+        // // assert(itf.valid_o == 1'b1);
+        assert(itf.data_o == 0)
             else begin
                 error_e err = INCORRECT_DATA_O_ON_YUMI_I;
                 $error ("%0d: %0t: %s error detected", `__LINE__, $time, err.name);
                 report_error (err);
             end
+        @(tb_clk);
+        itf.valid_i <= 1'b0;
+        itf.yumi <= 1'b0;
     end
-    itf.valid_i <= 1'b0;
-    itf.yumi <= 1'b0;
-
-
-
-
 
 
     /***************************************************************/
