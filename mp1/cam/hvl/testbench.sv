@@ -30,10 +30,26 @@ endtask
 // DO NOT MODIFY CODE ABOVE THIS LINE
 
 task write(input key_t key, input val_t val);
+    itf.rw_n <= 1'b0;
+    itf.valid_i <= 1'b1;
+    itf.key <= key;
+    itf.val_i <= val;
 endtask
 
 task read(input key_t key, output val_t val);
+    itf.rw_n <= 1'b1;
+    itf.valid_i <= 1'b1;
+    itf.key <= key;
+    val <= itf.val_o;
 endtask
+
+function assert_read_error(input val_t val);
+    assert (itf.val_o == val) else  begin
+        itf.tb_report_dut_error(READ_ERROR);
+        $error("%0t TB: Read %0d, expected %0d", $time, itf.val_o, val);
+    end
+endfunction
+
 
 initial begin
     $display("Starting CAM Tests");
@@ -43,6 +59,13 @@ initial begin
     // Feel free to make helper tasks / functions, initial / always blocks, etc.
     // Consider using the task skeltons above
     // To report errors, call itf.tb_report_dut_error in cam/include/cam_itf.sv
+    
+
+    // Write of different values on the same key on consecutive clock cycles
+    for(int i = 0; i < 4; i++) begin
+        write(0,i);
+        @(tb_clk);
+    end
 
 
     /**********************************************************************/
