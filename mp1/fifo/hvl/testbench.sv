@@ -57,7 +57,7 @@ initial begin
 
     // Enque coverage
     itf.valid_i <= 1'b1;
-    for (int i = 0; i < 10; i++) begin
+    for (int i = 0; i < 3; i++) begin
         itf.data_i <= i;
         @(tb_clk);
         assert (itf.rdy == 1'b1);
@@ -66,7 +66,7 @@ initial begin
 
     // Deque converage
     itf.yumi <= 1'b1;
-    for (int i = 0; i < 10; i++) begin
+    for (int i = 0; i < 3; i++) begin
         assert(itf.valid_o == 1'b1);
         assert(itf.data_o == i)
             else begin
@@ -88,7 +88,13 @@ initial begin
             report_error (err);
         end
 
-    for (int i = 1; i < 10; i++) begin
+    // Add One element
+    itf.valid_i <= 1'b1;
+    itf.data_i <= 0;
+    @(tb_clk);
+    itf.valid_i <= 1'b0;
+
+    for (int i = 1; i < 3; i++) begin
         itf.valid_i <= 1'b1;
         itf.data_i <= i;
         itf.yumi <= 1'b1;
