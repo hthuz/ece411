@@ -41,19 +41,21 @@ endfunction : report_error
 
 // DO NOT MODIFY CODE ABOVE THIS LINE
 
-initial begin
-    reset();
-    /************************ Your Code Here ***********************/
-    // Feel free to make helper tasks / functions, initial / always blocks, etc.
-
-    // Assert ready after reset
-    @(tb_clk);
+function void assert_after_reset();
     assert(itf.rdy == 1'b1)
         else begin
             error_e err = RESET_DOES_NOT_CAUSE_READY_O;
             $error ("%0d: %0t: %s error detected", `__LINE__, $time, err.name);
             report_error (err);
         end
+endfunction : assert_after_reset
+
+initial begin
+    reset();
+    /************************ Your Code Here ***********************/
+    // Feel free to make helper tasks / functions, initial / always blocks, etc.
+    @(tb_clk);
+    assert_after_reset();
 
     // Enque coverage
     itf.valid_i <= 1'b1;
@@ -81,15 +83,9 @@ initial begin
 
     // Both coverage
     for(int i = 1; i < CAP_P; i++) begin
-        
         reset();
         @(tb_clk);
-        assert(itf.rdy == 1'b1)
-            else begin
-                error_e err = RESET_DOES_NOT_CAUSE_READY_O;
-                $error ("%0d: %0t: %s error detected", `__LINE__, $time, err.name);
-                report_error (err);
-            end
+        assert_after_reset();
         // Load i elements
         itf.valid_i <= 1'b1;
         for(int j = 0; j < i; j++) begin
