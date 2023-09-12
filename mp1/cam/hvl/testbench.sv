@@ -34,6 +34,8 @@ task write(input key_t key, input val_t val);
     itf.valid_i <= 1'b1;
     itf.key <= key;
     itf.val_i <= val;
+    @(tb_clk);
+    itf.valid_i <= 1'b0;
 endtask
 
 task read(input key_t key, output val_t val);
@@ -41,12 +43,14 @@ task read(input key_t key, output val_t val);
     itf.valid_i <= 1'b1;
     itf.key <= key;
     val <= itf.val_o;
+    @(tb_clk);
+    itf.valid_i <= 1'b0;
 endtask
 
-function assert_read_error(input val_t val);
-    assert (itf.val_o == val) else  begin
+function assert_read_error(input val_t val_o, input val_t expected_val);
+    assert (val_o == expected_val) else  begin
         itf.tb_report_dut_error(READ_ERROR);
-        $error("%0t TB: Read %0d, expected %0d", $time, itf.val_o, val);
+        $error("%0t TB: Read %0d, expected %0d", $time, val_o, expected_val);
     end
 endfunction
 
@@ -61,11 +65,22 @@ initial begin
     // To report errors, call itf.tb_report_dut_error in cam/include/cam_itf.sv
     
 
-    // Write of different values on the same key on consecutive clock cycles
+    // Coverage 3: Write of different values on the same key on consecutive clock cycles
     for(int i = 0; i < 4; i++) begin
-        write(0,i);
-        @(tb_clk);
+        key_t key = 0;
+        write(key,i);
     end
+    
+    // Coverage 4: write then read;
+    reset();
+    for(int i = 0; i < 4; i++) begin
+        key_t key = 0;
+        val_t val;
+        write(key, i);
+        read(key, val);
+        assert_read_error(val, i);
+    end
+
 
 
     /**********************************************************************/
