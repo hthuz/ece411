@@ -63,9 +63,24 @@ initial begin
     // Feel free to make helper tasks / functions, initial / always blocks, etc.
     // Consider using the task skeltons above
     // To report errors, call itf.tb_report_dut_error in cam/include/cam_itf.sv
-    
+
+
+    // Coverage 1: evict key-value on eight indices;
+    for(int i = 0; i < 2 * camsize_p; i++) begin
+        write(i,i);
+    end
+
+    // Coverage 2: read-hit on eight indices;
+    reset();
+    for(int i = 0; i < camsize_p; i++) begin
+        val_t val;
+        write(i, i);
+        read(i, val);
+        assert_read_error(val, i);
+    end
 
     // Coverage 3: Write of different values on the same key on consecutive clock cycles
+    reset();
     for(int i = 0; i < 4; i++) begin
         key_t key = 0;
         write(key,i);
