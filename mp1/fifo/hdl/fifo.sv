@@ -30,6 +30,9 @@ logic  enqueue, dequeue;
 // We always know what the next data which will be dequeued is.
 // Thus it only makes sense to register it in an output buffer
 logic [WIDTH_P-1:0] output_buffer_r;
+
+// True is last operation is enque
+logic flag;
 /*****************************************************************************/
 
 /***************************** Output Assignments ****************************/
@@ -39,10 +42,12 @@ assign data_o = output_buffer_r;
 /*****************************************************************************/
 
 /******************************** Assignments ********************************/
-assign full = ptr_eq & (~sign_match);
+// assign full = ptr_eq & (~sign_match);
+assign full= ptr_eq & flag;
 assign ptr_eq = |(read_ptr == write_ptr);
 assign sign_match = read_ptr[PTR_WIDTH_P-1] == write_ptr[PTR_WIDTH_P-1];
-assign empty = ptr_eq & sign_match;
+// assign empty = ptr_eq & sign_match;
+assign empty = ptr_eq & (~flag);
 assign enqueue = ready_o & valid_i;
 assign dequeue = valid_o & yumi_i;
 assign write_ptr_next = write_ptr + '1;
@@ -55,6 +60,7 @@ always_ff @(posedge clk_i, negedge reset_n_i) begin
     if (~reset_n_i) begin
         read_ptr  <= '0;
         write_ptr <= '0;
+        flag <= 1'b0;
     end
     else begin
         case ({enqueue, dequeue})
@@ -62,6 +68,7 @@ always_ff @(posedge clk_i, negedge reset_n_i) begin
             2'b01: begin : dequeue_case
                 output_buffer_r <= queue[read_ptr_next];
                 read_ptr <= read_ptr_next;
+                flag <= 1'b0;
             end
             2'b10: begin : enqueue_case
                 queue[write_ptr] <= data_i;
@@ -69,6 +76,7 @@ always_ff @(posedge clk_i, negedge reset_n_i) begin
                 if (empty) begin
                     output_buffer_r <= data_i;
                 end
+                flag <= 1'b1;
             end
             // When enqueing and dequeing simultaneously, we must be careful
             // to place proper data into output buffer.
