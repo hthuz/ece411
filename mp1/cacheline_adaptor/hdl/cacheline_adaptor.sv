@@ -24,32 +24,44 @@ module cacheline_adaptor
                                     // on writes, signifies that the write is complete
 );
 
-assign read_o = read_i;
-assign write_o = write_i;
+assign address_o = address_i;
+// assign write_o = write_i;
 
-logic [1:0] burst_num;
+// logic [1:0] burst_num;
+int burst_num;
 logic [63:0] buffered_read[4];
 logic resp_i_flag;
 
-always_ff @(posedge clk_i, negedge reset_n) begin
+always_ff @(posedge clk, negedge reset_n) begin
 
-    // Reading from DRAM
-    if(read_o) begin
+    if (~reset_n) begin
+        read_o <= 1'b0;
+        burst_num <= 0;
+        resp_i_flag <= 1'b0;
+    end
+    else begin
+
+        // Receive read signal from LLC
+        if(read_i) begin
+            read_o <= 1'b1;
+        end
+
+        // Reading from DRAM
         if(resp_i) begin
             buffered_read[burst_num] <= burst_i;
             burst_num <= burst_num + 1;
-            resp_i_flag <= 1'b1;
         end
+
+        resp_o <= 1'b0;
+        // Returning data to LLC
+        if(burst_num == 4) begin
+            read_o <= 1'b0;
+            resp_o <= 1'b1;
+            line_o <= {buffered_read[3],buffered_read[2],buffered_read[1],buffered_read[0]};
+            burst_num <= 0;
+        end
+
     end
-
-    // Returning data to LLC
-    if(resp_i_flag && (burst_num == 0)) begin
-        resp_o <= 1'b1;
-        line_o <= {burst_num[3],burst_num[2],burst_num[1],burst_num[0]};
-        resp_i_flag <= 1'b0;
-    end
-
-
 
 
 end
