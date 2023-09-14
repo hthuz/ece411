@@ -46,7 +46,6 @@ endfunction : report_error
 
 initial itf.reset_n = 1'b0;
 initial begin
-    assert (itf.reset_n == 1'b0)
     reset();
     /********************** Your Code Here *****************************/
 
@@ -56,10 +55,12 @@ initial begin
         report_error (NOT_READY);
     end
 
+    // Coverage 1: assert start_i with every multiplier and multiplicant 
     for(int i = 0; i < 256; i++) begin
         for(int j = 0; j < 256; j++) begin
             itf.multiplier <= i;
             itf.multiplicand <= j;
+            // Coverage 2: assert start_i in run state
             itf.start <= 1'b1;
             @(tb_clk iff itf.done == 1'b1 );
 
@@ -76,6 +77,49 @@ initial begin
             end
         end
     end
+
+    itf.start <= 1'b0;
+    @(tb_clk);
+    // Coverage 3: assert reset_n_i when in run state
+    itf.multiplicand <= 10;
+    itf.multiplier <= 10;
+    itf.start <= 1'b1;
+    ##3; // First run state
+    itf.reset_n <= 1'b0;
+    ##1;
+    assert (itf.rdy == 1'b1)
+    else begin
+        $error("%0d: %0t: NOT_READY error detected", `__LINE__, $time);
+        report_error (NOT_READY);
+    end
+    ##3;
+    itf.reset_n <= 1'b1;
+
+    ##4; // Second run state
+    itf.reset_n <= 1'b0;
+    ##1;
+    assert (itf.rdy == 1'b1)
+    else begin
+        $error("%0d: %0t: NOT_READY error detected", `__LINE__, $time);
+        report_error (NOT_READY);
+    end
+    ##3;
+    itf.reset_n <= 1'b1;
+
+
+
+    // @(tb_clk iff itf.done == 1'b1);
+    // assert (itf.rdy == 1'b1)
+    // else begin
+    //     $error("%0d: %0t: NOT_READY error detected", `__LINE__, $time);
+    //     report_error (NOT_READY);
+    // end
+
+    // assert (itf.product == 10 * 10)
+    // else begin
+    //     $error("%0d: %0t: BAD_PRODUCT error detected", `__LINE__, $time);
+    //     report_error (BAD_PRODUCT);
+    // end
 
 
     /*******************************************************************/
