@@ -28,43 +28,134 @@ assign address_o = address_i;
 // assign write_o = write_i;
 
 // logic [1:0] burst_num;
-int burst_num;
+logic [2:0] read_burst_num;
+
+int write_burst_num;
 logic [63:0] buffered_read[4];
-logic resp_i_flag;
+logic [63:0] buffered_write[4];
+
+enum logic [1:0] {
+    s_wait,
+    s_read,
+    s_send
+} state, next_state;
 
 always_ff @(posedge clk, negedge reset_n) begin
-
-    if (~reset_n) begin
-        read_o <= 1'b0;
-        burst_num <= 0;
-        resp_i_flag <= 1'b0;
+    if(~reset_n) begin
+        state <= s_wait;
+        read_burst_num <= 0;
     end
     else begin
-
-        // Receive read signal from LLC
-        if(read_i) begin
-            read_o <= 1'b1;
-        end
-
-        // Reading from DRAM
-        if(resp_i) begin
-            buffered_read[burst_num] <= burst_i;
-            burst_num <= burst_num + 1;
-        end
-
-        resp_o <= 1'b0;
-        // Returning data to LLC
-        if(burst_num == 4) begin
-            read_o <= 1'b0;
-            resp_o <= 1'b1;
-            line_o <= {buffered_read[3],buffered_read[2],buffered_read[1],buffered_read[0]};
-            burst_num <= 0;
-        end
-
+        state <= next_state;
+        if(resp_i && state == s_read)
+            read_burst_num <= read_burst_num + 1;
+        if(state == s_send)
+            read_burst_num <= 0;
     end
+end
 
+
+always_comb begin
+
+    read_o = 1'b0;
+    resp_o = 1'b0;
+    unique case(state)
+        s_wait:
+            if (read_i)
+                next_state = s_read;
+            else 
+                next_state = s_wait;
+        s_read:
+            if (read_burst_num == 3)
+                next_state = s_send;
+            else
+                next_state = s_read;
+        s_send:
+            next_state = s_wait;
+        default: ;
+    endcase
+
+    case(state)
+        s_wait: begin
+        end
+        s_read: begin
+            read_o = 1'b1;
+            if(resp_i) begin
+                buffered_read[read_burst_num] = burst_i;
+            end
+        end
+        s_send: begin
+            resp_o = 1'b1;
+            line_o = {buffered_read[3],buffered_read[2],buffered_read[1],buffered_read[0]};
+        end
+
+    endcase
 
 end
+
+// always_ff @(posedge clk, negedge reset_n) begin
+
+//     if (~reset_n) begin
+//         read_o <= 1'b0;
+//         write_o <= 1'b0;
+//         read_burst_num <= 0;
+//         write_burst_num <= 0;
+//     end
+//     else begin
+
+//         // Receive read signal from LLC
+//         if(read_i) begin
+//             read_o <= 1'b1;
+//         end
+
+//         // Reading from DRAM
+//         if(read_o) begin
+//             if(resp_i) begin
+//                 buffered_read[read_burst_num] <= burst_i;
+//                 read_burst_num <= read_burst_num + 1;
+//             end
+//         end
+
+//         resp_o <= 1'b0;
+//         // Returning data to LLC
+//         if(read_burst_num == 4) begin
+//             read_o <= 1'b0;
+//             resp_o <= 1'b1;
+//             line_o <= {buffered_read[3],buffered_read[2],buffered_read[1],buffered_read[0]};
+//             read_burst_num <= 0;
+//         end
+
+//         // Receive write request from LLC
+//         if (write_i) begin
+//             buffered_write[0] <= line_i[63:0];
+//             buffered_write[1] <= line_i[127:64];
+//             buffered_write[2] <= line_i[191:128];
+//             buffered_write[3] <= line_i[255:192];
+//             write_o <= 1'b1;
+//             // $display("buffered %x%x%x%x", buffered_write[3], buffered_write[2], buffered_write[1], buffered_write[0]);
+//         end
+
+//         // Writing to DRAM
+//         if(write_o) begin
+//             burst_o <= buffered_write[write_burst_num];
+//             if(resp_i) begin
+//                 write_burst_num <= write_burst_num + 1;
+//                 $display("burst_o %x", burst_o);
+//             end
+//         end
+
+//         // Writing completed
+//         if(write_burst_num == 4) begin
+//             write_o <= 1'b0;
+//             write_burst_num <= 0;
+//             resp_o <= 1'b1;
+//         end
+
+
+//     end
+
+
+// end
 
 
 

@@ -100,6 +100,7 @@ module testbench;
 
         @(cb iff cb.resp_o);
         assert((read_o_counter - delay - 1) == 4) else begin
+            // $display("read_o_counter is %0d, delay is %0d", read_o_counter, delay);
             $sformat(s, "@%0t TB: read_o assertion mismatch", $time);
                 `LOG;
         end
@@ -136,6 +137,7 @@ module testbench;
         end
         delay = 5'($urandom);
 
+        $display("MARK 1");
         @(cb iff cb.write_o);
         for (int it = 0; it < int'(delay); ++it) begin
             assert(cb.address_o == address_i) else begin
@@ -153,7 +155,9 @@ module testbench;
         end
         cb.resp_i <= 1'b0;
 
+        $display("MARK 2");
         @(cb iff cb.resp_o);
+        $display("MARK 3");
         assert((write_o_counter - delay - 2) == 4) else begin
             $sformat(s, "@%0t TB: write_o assertion mismatch", $time);
                 `LOG;
