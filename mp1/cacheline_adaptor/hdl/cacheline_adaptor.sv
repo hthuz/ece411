@@ -34,23 +34,31 @@ int write_burst_num;
 logic [63:0] buffered_read[4];
 logic [63:0] buffered_write[4];
 
-enum logic [1:0] {
+enum logic [2:0] {
     s_wait,
-    s_read,
-    s_send
+    s_read,      // Read from memory
+    s_read_send, // Send to LLC
+    s_write,     // Write from LLC to cacheline 
+    s_write_send // Send to memory
 } state, next_state;
 
 always_ff @(posedge clk, negedge reset_n) begin
     if(~reset_n) begin
         state <= s_wait;
         read_burst_num <= 0;
+        write_burst_num <= 0;
     end
     else begin
         state <= next_state;
         if(resp_i && state == s_read)
             read_burst_num <= read_burst_num + 1;
-        if(state == s_send)
+        if(state == s_read_send) begin
             read_burst_num <= 0;
+        end
+        if(resp_i && state == s_write_send)
+            write_burst_num <= write_burst_num + 1;
+        if(state == s_write)
+            write_burst_num <= 0;
     end
 end
 
@@ -58,20 +66,30 @@ end
 always_comb begin
 
     read_o = 1'b0;
+    write_o = 1'b0;
     resp_o = 1'b0;
     unique case(state)
         s_wait:
             if (read_i)
                 next_state = s_read;
-            else 
+            else if (write_i)
+                next_state = s_write;
+            else
                 next_state = s_wait;
         s_read:
             if (read_burst_num == 3)
-                next_state = s_send;
+                next_state = s_read_send;
             else
                 next_state = s_read;
-        s_send:
+        s_read_send:
             next_state = s_wait;
+        s_write:
+            next_state = s_write_send;
+        s_write_send:
+            if (write_burst_num == 4)
+                next_state = s_wait;
+            else
+                next_state = s_write_send;
         default: ;
     endcase
 
@@ -84,11 +102,22 @@ always_comb begin
                 buffered_read[read_burst_num] = burst_i;
             end
         end
-        s_send: begin
+        s_read_send: begin
             resp_o = 1'b1;
             line_o = {buffered_read[3],buffered_read[2],buffered_read[1],buffered_read[0]};
         end
-
+        s_write: begin
+            buffered_write[0] = line_i[63:0];
+            buffered_write[1] = line_i[127:64];
+            buffered_write[2] = line_i[191:128];
+            buffered_write[3] = line_i[255:192];
+        end
+        s_write_send: begin
+            write_o = 1'b1;
+            burst_o = buffered_write[write_burst_num];
+            if(write_burst_num == 4)
+                resp_o = 1'b1;
+        end
     endcase
 
 end
@@ -118,38 +147,38 @@ end
 
 //         resp_o <= 1'b0;
 //         // Returning data to LLC
-//         if(read_burst_num == 4) begin
+//         if(read_burst_num == 3) begin
 //             read_o <= 1'b0;
 //             resp_o <= 1'b1;
 //             line_o <= {buffered_read[3],buffered_read[2],buffered_read[1],buffered_read[0]};
 //             read_burst_num <= 0;
 //         end
 
-//         // Receive write request from LLC
-//         if (write_i) begin
-//             buffered_write[0] <= line_i[63:0];
-//             buffered_write[1] <= line_i[127:64];
-//             buffered_write[2] <= line_i[191:128];
-//             buffered_write[3] <= line_i[255:192];
-//             write_o <= 1'b1;
-//             // $display("buffered %x%x%x%x", buffered_write[3], buffered_write[2], buffered_write[1], buffered_write[0]);
-//         end
+//         // // Receive write request from LLC
+//         // if (write_i) begin
+//         //     buffered_write[0] <= line_i[63:0];
+//         //     buffered_write[1] <= line_i[127:64];
+//         //     buffered_write[2] <= line_i[191:128];
+//         //     buffered_write[3] <= line_i[255:192];
+//         //     write_o <= 1'b1;
+//         //     // $display("buffered %x%x%x%x", buffered_write[3], buffered_write[2], buffered_write[1], buffered_write[0]);
+//         // end
 
-//         // Writing to DRAM
-//         if(write_o) begin
-//             burst_o <= buffered_write[write_burst_num];
-//             if(resp_i) begin
-//                 write_burst_num <= write_burst_num + 1;
-//                 $display("burst_o %x", burst_o);
-//             end
-//         end
+//         // // Writing to DRAM
+//         // if(write_o) begin
+//         //     burst_o <= buffered_write[write_burst_num];
+//         //     if(resp_i) begin
+//         //         write_burst_num <= write_burst_num + 1;
+//         //         $display("burst_o %x", burst_o);
+//         //     end
+//         // end
 
-//         // Writing completed
-//         if(write_burst_num == 4) begin
-//             write_o <= 1'b0;
-//             write_burst_num <= 0;
-//             resp_o <= 1'b1;
-//         end
+//         // // Writing completed
+//         // if(write_burst_num == 4) begin
+//         //     write_o <= 1'b0;
+//         //     write_burst_num <= 0;
+//         //     resp_o <= 1'b1;
+//         // end
 
 
 //     end
