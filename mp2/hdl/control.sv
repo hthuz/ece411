@@ -84,6 +84,15 @@ end
 
 enum int unsigned {
     /* List of states */
+    s_fetch1, s_fetch2, s_fetch3,
+    s_decode,
+    s_imm,
+    s_lui,
+    s_auipc,
+    s_br,
+    s_calc_addr,
+    s_ld1, s_ld2,
+    s_st1, s_st2
 } state, next_states;
 
 /************************* Function Definitions *******************************/
@@ -145,12 +154,70 @@ begin : state_actions
     /* Default output assignments */
     set_defaults();
     /* Actions for each state */
+    case(state) 
+        s_fetch1: begin 
+
+        end
+
+        s_fetch2: begin
+
+        end
+
+        s_fetch3: begin 
+
+        end
+
+        s_decode: begin 
+
+        end
+
+        s_imm: begin 
+
+        end
+
+        s_lui: begin  
+
+        end 
+
+        s_auipc: begin 
+
+        end
+
+        s_br: begin 
+
+        end
+
+        s_calc_addr: begin 
+
+
+        end
+
+        s_ld1: begin 
+
+        end
+
+        s_ld2: begin 
+
+        end
+
+        s_st1: begin
+
+        end
+
+        s_st2: begin
+
+        end
+    endcase
 end
 
 always_comb
 begin : next_state_logic
     /* Next state information and conditions (if any)
      * for transitioning between states */
+
+     case(state)
+         s_fetch1: ;
+     endcase
 end
 
 always_ff @(posedge clk)
