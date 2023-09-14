@@ -23,10 +23,10 @@ always_comb begin
         8'd02: idx_o = 3'd1;
         8'd04: idx_o = 3'd2;
         8'd08: idx_o = 3'd3;
-        8'd10: idx_o = 3'd4;
-        8'd20: idx_o = 3'd5;
-        8'd40: idx_o = 3'd6;
-        8'd80: idx_o = 3'd7;
+        8'd16: idx_o = 3'd4;
+        8'd32: idx_o = 3'd5;
+        8'd64: idx_o = 3'd6;
+        8'd128: idx_o = 3'd7;
         default: if ($time != 0)
             $info("CAMCTL: %s %0d: reset to make valid",
                             `__FILE__, `__LINE__);
