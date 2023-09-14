@@ -4,9 +4,9 @@ module regfile
     input clk,
     input rst,
     input load,
-    input [31:0] in,
-    input [4:0] src_a, src_b, dest,
-    output logic [31:0] reg_a, reg_b
+    input [31:0] in,                  // Write data
+    input [4:0] src_a, src_b, dest,   // Which register
+    output logic [31:0] reg_a, reg_b  // Read data
 );
 
 //logic [31:0] data [32] /* synthesis ramstyle = "logic" */ = '{default:'0};
