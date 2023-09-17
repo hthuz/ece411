@@ -49,7 +49,11 @@ rv32i_word cmpmux_out;
 rv32i_word regfilemux_out;
 rv32i_word rs1_out;
 rv32i_word rs2_out;
+rv32i_word mem_data_out;
 
+assign rs1 = rs1_out;
+assign rs2 = rs2_out;
+assign mem_wdata = mem_data_out;
 
 /***************************** Registers *************************************/
 // Keep Instruction register named `IR` for RVFI Monitor
@@ -90,6 +94,14 @@ always_ff @( posedge clk ) begin : pc_ff
         pc_out <= pcmux_out;
     end
 end : pc_ff
+
+always_ff @( posedge clk ) begin :  data_out_ff
+    if (rst) begin
+        mem_data_out <= '0;
+    end else if (load_data_out) begin
+        mem_data_out <= rs2_out;
+    end
+end : data_out_ff
 
 regfile RegFile(
     .*,

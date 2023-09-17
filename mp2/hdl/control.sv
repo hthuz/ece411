@@ -162,6 +162,10 @@ function void loadIR();
     load_ir = 1'b1;
 endfunction
 
+function void loadDataOut();
+    load_data_out = 1'b1;
+endfunction
+
 function void setALU(alumux::alumux1_sel_t sel1, alumux::alumux2_sel_t sel2, logic setop, alu_ops op);
     /* Student code here */
     alumux1_sel = sel1;
@@ -250,11 +254,12 @@ begin : state_actions
         end
 
         s_st1: begin
-
+            loadDataOut();
+            mem_write = 1'b1;
         end
 
         s_st2: begin
-
+            loadPC(pcmux::pc_plus4);
         end
     endcase
 end
