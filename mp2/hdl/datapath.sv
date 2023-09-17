@@ -16,6 +16,7 @@ import rv32i_types::*;
     input regfilemux::regfilemux_sel_t regfilemux_sel,
     input marmux::marmux_sel_t marmux_sel,
     input cmpmux::cmpmux_sel_t cmpmux_sel,
+    input alu_ops aluop,
 
     input rv32i_word mem_rdata,
     output rv32i_word mem_wdata, // signal used by RVFI Monitor
@@ -23,6 +24,7 @@ import rv32i_types::*;
     output [2:0] funct3,
     output [6:0] funct7,
     output rv32i_opcode opcode,
+    output br_en,
     output [31:0] i_imm,
     output [31:0] s_imm,
     output [31:0] b_imm,
@@ -101,7 +103,7 @@ regfile RegFile(
 
 /******************************* ALU and CMP *********************************/
 alu ALU(
-    .aluop(),
+    .aluop(aluop),
     .a(alumux1_out),
     .b(alumux2_out),
     .f(alu_out)
@@ -150,7 +152,7 @@ always_comb begin : MUXES
         regfilemux::alu_out : regfilemux_out = alu_out;
         regfilemux::br_en : ;
         regfilemux::u_imm : regfilemux_out = u_imm;
-        regfilemux::lw : ;
+        regfilemux::lw : regfilemux_out = mdrreg_out;
         regfilemux::pc_plus4 : ;
         regfilemux::lb : ;
         regfilemux::lbu : ;

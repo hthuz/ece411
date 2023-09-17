@@ -145,6 +145,8 @@ function void loadPC(pcmux::pcmux_sel_t sel);
 endfunction
 
 function void loadRegfile(regfilemux::regfilemux_sel_t sel);
+    load_regfile = 1'b1;
+    regfilemux_sel_t = sel;
 endfunction
 
 function void loadMAR(marmux::marmux_sel_t sel);
@@ -162,8 +164,8 @@ endfunction
 
 function void setALU(alumux::alumux1_sel_t sel1, alumux::alumux2_sel_t sel2, logic setop, alu_ops op);
     /* Student code here */
-
-
+    alumux1_sel = sel1;
+    alumux2_sel = sel2;
     if (setop)
         aluop = op; // else default value
 endfunction
@@ -188,6 +190,7 @@ begin : state_actions
 
         s_fetch2: begin
             loadMDR();
+            mem_read = 1'b1;
         end
 
         s_fetch3: begin 
@@ -199,11 +202,16 @@ begin : state_actions
         end
 
         s_imm: begin 
-
+            // 
+            if(opcode == rv32i_opcode::op_imm)
+                setALU(alumux::rs1_out, alumux::i_imm, 1, funct3);
+            else // Opcode is op_reg
+                setALU(alumux::rs1_out, alumux::rs2_out, 1, funct3);
+            loadRegfile(regfilemux::alu_out);
         end
 
         s_lui: begin  
-
+            loadRegfile(regfilemux::u_imm);
         end 
 
         s_auipc: begin 
@@ -215,16 +223,26 @@ begin : state_actions
         end
 
         s_calc_addr: begin 
-
-
+            if(opcode == rv32i_opcode::op_load)
+                setALU(alumux::rs1_out, alumux::i_imm, 1, alu_ops::alu_add);
+            else // Store
+                setALU(almux::rs1_out, alumux::s_imm, 1, alu_ops::alu_add);
+            loadMAR(marmux::alu_out);
         end
 
         s_ld1: begin 
-
+            mem_read = 1'b1;
+            loadMDR();
         end
 
         s_ld2: begin 
-
+            case(load_funct3)
+                load_funct3_t::lb : loadRegfile(regfilemux::lw);
+                load_funct3_t::lh : loadRegfile(regfilemux::lh);
+                load_funct3_t::lw : loadRegfile(regfilemux::lw);
+                load_funct3_t::lbu : loadRegfile(regfilemux::lbu);
+                load_funct3_t::lhu : loadRegfile(regfilemux::lhu);
+            endcase
         end
 
         s_st1: begin
@@ -259,17 +277,21 @@ begin : next_state_logic
                  rv32i_opcode::op_jal: ;
                  rv32i_opcode::op_jalr: ;
                  rv32i_opcode::op_br: next_state = s_br;
-                 rv32i_opcode::op_load: ;
-                 rv32i_opcode::op_store: ;
+                 rv32i_opcode::op_load: next_state = s_calc_addr;
+                 rv32i_opcode::op_store: next_state = s_calc_addr;
                  rv32i_opcode::op_imm: next_state = s_imm;
-                 rv32i_opcode::op_reg: ;
+                 rv32i_opcode::op_reg: next_state = s_imm;
                  rv32i_opcode::op_csr: ;
              endcase
         s_imm:
             next_state = s_fetch1;
         s_lui:
             next_state = s_fetch1;
-        s_calc_addr: ;
+        s_calc_addr: 
+            if(opcode == rv32i_opcode::op_load)
+                next_state = s_ld1;
+            else // Store
+                next_state = s_st1;
         s_ld1:
             if(mem_resp)
                 next_state = s_ld2;
