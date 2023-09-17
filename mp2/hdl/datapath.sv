@@ -20,6 +20,7 @@ import rv32i_types::*;
 
     input rv32i_word mem_rdata,
     output rv32i_word mem_wdata, // signal used by RVFI Monitor
+    output rv32i_word mem_address,
     // IR signals to control
     output [2:0] funct3,
     output [6:0] funct7,
@@ -80,9 +81,11 @@ always_ff @( posedge clk ) begin : mar_ff
     end
 end : mar_ff
 
+assign mem_address = mar_out;
+
 always_ff @( posedge clk ) begin : pc_ff
     if (rst) begin
-        pc_out <= '0;
+        pc_out <= 32'h40000000;
     end else if (load_pc) begin
         pc_out <= pcmux_out;
     end
@@ -136,7 +139,7 @@ always_comb begin : MUXES
 
     unique case (alumux1_sel)
         alumux::rs1_out : alumux1_out = rs1_out;
-        alumux::pc_out : alumux2_out = pc_out;
+        alumux::pc_out : alumux1_out = pc_out;
     endcase
 
     unique case (alumux2_sel)

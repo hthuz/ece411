@@ -216,7 +216,9 @@ begin : state_actions
         end 
 
         s_auipc: begin 
-
+            setALU(alumux::pc_out,alumux::u_imm, 1, rv32i_types::alu_add);
+            loadRegfile(regfilemux::alu_out);
+            loadPC(pcmux::pc_plus4);
         end
 
         s_br: begin 
