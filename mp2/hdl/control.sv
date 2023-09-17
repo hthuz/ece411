@@ -10,6 +10,7 @@ import rv32i_types::*; /* Import types defined in rv32i_types.sv */
     input logic br_en,
     input logic [4:0] rs1,
     input logic [4:0] rs2,
+    input logic mem_resp,
     output pcmux::pcmux_sel_t pcmux_sel,
     output alumux::alumux1_sel_t alumux1_sel,
     output alumux::alumux2_sel_t alumux2_sel,
@@ -22,7 +23,9 @@ import rv32i_types::*; /* Import types defined in rv32i_types.sv */
     output logic load_regfile,
     output logic load_mar,
     output logic load_mdr,
-    output logic load_data_out
+    output logic load_data_out,
+    output logic mem_read,
+    output logic mem_write
 );
 
 /***************** USED BY RVFIMON --- ONLY MODIFY WHEN TOLD *****************/
@@ -93,7 +96,7 @@ enum int unsigned {
     s_calc_addr,
     s_ld1, s_ld2,
     s_st1, s_st2
-} state, next_states;
+} state, next_state;
 
 /************************* Function Definitions *******************************/
 /**
@@ -114,6 +117,22 @@ enum int unsigned {
  *   and then call it at the beginning of your always_comb block.
 **/
 function void set_defaults();
+    load_pc = 1'b0;
+    load_ir = 1'b0;
+    load_mar = 1'b0;
+    load_mdr = 1'b0;
+    load_regfile = 1'b0;
+    load_data_out = 1'b0;
+
+    mem_read = 1'b0;
+    mem_write = 1'b0;
+
+    pcmux_sel = pcmux::pc_plus4;
+    alumux1_sel = alumux::rs1_out;
+    alumux2_sel = alumux::i_imm;
+    regfilemux_sel = regfilemux::alu_out;
+    marmux_sel = marmux::pc_out;
+    cmpmux_sel = cmpmux::rs2_out;
 endfunction
 
 /**
@@ -129,9 +148,16 @@ function void loadRegfile(regfilemux::regfilemux_sel_t sel);
 endfunction
 
 function void loadMAR(marmux::marmux_sel_t sel);
+    load_mar = 1'b1;
+    marmux_sel = sel;
 endfunction
 
 function void loadMDR();
+    load_mdr = 1'b1;
+endfunction
+
+function void loadIR();
+    load_ir = 1'b1;
 endfunction
 
 function void setALU(alumux::alumux1_sel_t sel1, alumux::alumux2_sel_t sel2, logic setop, alu_ops op);
@@ -156,15 +182,16 @@ begin : state_actions
     /* Actions for each state */
     case(state) 
         s_fetch1: begin 
-
+            load_pc(pcmux::pc_plus4);
+            loadMAR(marmux::pc_out);
         end
 
         s_fetch2: begin
-
+            loadMDR();
         end
 
         s_fetch3: begin 
-
+            loadIR();
         end
 
         s_decode: begin 
@@ -216,13 +243,61 @@ begin : next_state_logic
      * for transitioning between states */
 
      case(state)
-         s_fetch1: ;
+         s_fetch1: 
+             next_state = s_fetch2;
+         s_fetch2:
+             if(mem_resp)
+                 next_state = s_fetch3;
+             else
+                 next_state = s_fetch2;
+         s_fetch3:
+             next_state = s_decode;
+         s_decode:
+             case(opcode)
+                 rv32i_opcode::op_lui: next_state = s_lui;
+                 rv32i_opcode::op_auipc: next_state = s_auipc;
+                 rv32i_opcode::op_jal: ;
+                 rv32i_opcode::op_jalr: ;
+                 rv32i_opcode::op_br: next_state = s_br;
+                 rv32i_opcode::op_load: ;
+                 rv32i_opcode::op_store: ;
+                 rv32i_opcode::op_imm: next_state = s_imm;
+                 rv32i_opcode::op_reg: ;
+                 rv32i_opcode::op_csr: ;
+             endcase
+        s_imm:
+            next_state = s_fetch1;
+        s_lui:
+            next_state = s_fetch1;
+        s_calc_addr: ;
+        s_ld1:
+            if(mem_resp)
+                next_state = s_ld2;
+            else
+                next_state = s_ld1;
+        s_ld2:
+            next_state = s_fetch1;
+        s_st1:
+            if(mem_resp)
+                next_state = s_st2;
+            else
+                next_state = s_st1;
+        s_st2:
+            next_state = s_fetch1;
+        s_auipc:
+            next_state = s_fetch1;
+        s_br:
+            next_state = s_fetch1;
      endcase
 end
 
 always_ff @(posedge clk)
 begin: next_state_assignment
     /* Assignment of next state on clock edge */
+    if (rst) 
+        state <= s_fetch1;
+    else
+        state <= next_state;
 end
 
 endmodule : control
