@@ -35,7 +35,7 @@ logic [31:0] u_imm;
 logic [31:0] j_imm;
 logic [4:0] rs1;
 logic [4:0] rs2;
-logic [4:0] r;
+logic [4:0] rd;
 /**************************** Control Signals ********************************/
 pcmux::pcmux_sel_t pcmux_sel;
 alumux::alumux1_sel_t alumux1_sel;
