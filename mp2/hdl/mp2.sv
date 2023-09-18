@@ -24,6 +24,7 @@ logic load_data_out;
 
 
 alu_ops aluop;
+branch_funct3_t cmp_op;
 logic [2:0] funct3;
 logic [6:0] funct7;
 rv32i_opcode opcode;

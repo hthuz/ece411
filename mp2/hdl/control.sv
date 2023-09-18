@@ -18,7 +18,7 @@ import rv32i_types::*; /* Import types defined in rv32i_types.sv */
     output marmux::marmux_sel_t marmux_sel,
     output cmpmux::cmpmux_sel_t cmpmux_sel,
     output alu_ops aluop,
-    output branch_funct3 cmp_op,
+    output branch_funct3_t cmp_op,
     output logic load_pc,
     output logic load_ir,
     output logic load_regfile,
@@ -209,7 +209,7 @@ begin : state_actions
 
         s_imm: begin 
             // 
-            if(opcode == rv32i_types::op_imm)
+            if(opcode == op_imm)
                 setALU(alumux::rs1_out, alumux::i_imm, 1, funct3);
             else // Opcode is op_reg
                 setALU(alumux::rs1_out, alumux::rs2_out, 1, funct3);
@@ -223,14 +223,14 @@ begin : state_actions
         end 
 
         s_auipc: begin 
-            setALU(alumux::pc_out,alumux::u_imm, 1, rv32i_types::alu_add);
+            setALU(alumux::pc_out,alumux::u_imm, 1,alu_add);
             loadRegfile(regfilemux::alu_out);
             loadPC(pcmux::pc_plus4);
         end
 
         s_br: begin 
-            setCMP(cmpmux_sel_t::rs2_out, branch_funct3);
-            setALU(alumux::pc_out, alumux::b_imm, 1, rv32i_types::alu_add);
+            setCMP(cmpmux::rs2_out, branch_funct3);
+            setALU(alumux::pc_out, alumux::b_imm, 1,alu_add);
             if(br_en)
                 loadPC(pcmux::alu_out);
             else
@@ -238,10 +238,10 @@ begin : state_actions
         end
 
         s_calc_addr: begin 
-            if(opcode == rv32i_types::op_load)
-                setALU(alumux::rs1_out, alumux::i_imm, 1, rv32i_types::alu_add);
+            if(opcode == op_load)
+                setALU(alumux::rs1_out, alumux::i_imm, 1, alu_add);
             else // Store
-                setALU(alumux::rs1_out, alumux::s_imm, 1, rv32i_types::alu_add);
+                setALU(alumux::rs1_out, alumux::s_imm, 1, alu_add);
             loadMAR(marmux::alu_out);
         end
 
@@ -252,11 +252,11 @@ begin : state_actions
 
         s_ld2: begin 
             case(load_funct3)
-                rv32i_types::lb : loadRegfile(regfilemux::lw);
-                rv32i_types::lh : loadRegfile(regfilemux::lh);
-                rv32i_types::lw : loadRegfile(regfilemux::lw);
-                rv32i_types::lbu : loadRegfile(regfilemux::lbu);
-                rv32i_types::lhu : loadRegfile(regfilemux::lhu);
+                lb : loadRegfile(regfilemux::lw);
+                lh : loadRegfile(regfilemux::lh);
+                lw : loadRegfile(regfilemux::lw);
+                lbu : loadRegfile(regfilemux::lbu);
+                lhu : loadRegfile(regfilemux::lhu);
             endcase
             loadPC(pcmux::pc_plus4);
         end

@@ -4,7 +4,7 @@ import rv32i_types::*;
 (
     input branch_funct3_t cmp_op,
     input [31:0] a, b, // A points to rs1_out, B points to mux
-    output logic br_en,
+    output logic br_en
 );
 
 always_comb 

@@ -33,7 +33,7 @@ import rv32i_types::*;
     output [31:0] u_imm,
     output [31:0] j_imm,
     output [4:0] rs1,
-    output [4:0] rs2,
+    output [4:0] rs2,   // Index of register
     output [4:0] rd
     /* You will need to connect more signals to your datapath module*/
 );
@@ -48,12 +48,10 @@ rv32i_word alumux2_out;
 rv32i_word alu_out;
 rv32i_word cmpmux_out;
 rv32i_word regfilemux_out;
-rv32i_word rs1_out;
+rv32i_word rs1_out;         // Content of registers
 rv32i_word rs2_out;
 rv32i_word mem_data_out;
 
-assign rs1 = rs1_out;
-assign rs2 = rs2_out;
 assign mem_wdata = mem_data_out;
 
 /***************************** Registers *************************************/
