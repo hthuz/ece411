@@ -17,6 +17,7 @@ import rv32i_types::*;
     input marmux::marmux_sel_t marmux_sel,
     input cmpmux::cmpmux_sel_t cmpmux_sel,
     input alu_ops aluop,
+    input branch_funct3_t cmp_op,
 
     input rv32i_word mem_rdata,
     output rv32i_word mem_wdata, // signal used by RVFI Monitor
@@ -122,6 +123,13 @@ alu ALU(
     .a(alumux1_out),
     .b(alumux2_out),
     .f(alu_out)
+);
+
+cmp CMP(
+    .cmp_op(cmp_op),
+    .a(rs1_out),
+    .b(cmpmux_out),
+    .br_en(br_en)
 );
 
 

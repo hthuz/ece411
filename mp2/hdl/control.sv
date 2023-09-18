@@ -18,6 +18,7 @@ import rv32i_types::*; /* Import types defined in rv32i_types.sv */
     output marmux::marmux_sel_t marmux_sel,
     output cmpmux::cmpmux_sel_t cmpmux_sel,
     output alu_ops aluop,
+    output branch_funct3 cmp_op,
     output logic load_pc,
     output logic load_ir,
     output logic load_regfile,
@@ -175,6 +176,8 @@ function void setALU(alumux::alumux1_sel_t sel1, alumux::alumux2_sel_t sel2, log
 endfunction
 
 function automatic void setCMP(cmpmux::cmpmux_sel_t sel, branch_funct3_t op);
+    cmpmux_sel = sel;
+    cmp_op = op;
 endfunction
 
 /*****************************************************************************/
@@ -226,7 +229,12 @@ begin : state_actions
         end
 
         s_br: begin 
-
+            setCMP(cmpmux_sel_t::rs2_out, branch_funct3);
+            setALU(alumux::pc_out, alumux::b_imm, 1, rv32i_types::alu_add);
+            if(br_en)
+                loadPC(pcmux::alu_out);
+            else
+                loadPC(pcmux::pc_plus4);
         end
 
         s_calc_addr: begin 
