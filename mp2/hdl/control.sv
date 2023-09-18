@@ -181,6 +181,59 @@ function automatic void setCMP(cmpmux::cmpmux_sel_t sel, branch_funct3_t op);
     cmp_op = op;
 endfunction
 
+function void imm_choose_op();
+    if(arith_funct3 == slt) begin
+        setCMP(cmpmux::i_imm, blt);
+        loadRegfile(regfilemux::br_en);
+    end
+    else if (arith_funct3 == sltu) begin
+        setCMP(cmpmux::i_imm, bltu);
+        loadRegfile(regfilemux::br_en);
+    end
+    else if(arith_funct3 == sr) begin // SRAI, SRLI
+        if (funct7 == 7'b0100000 ) // SRAI
+            setALU(alumux::rs1_out, alumux::i_imm, 1, alu_sra);
+        else // SRLI
+            setALU(alumux::rs1_out, alumux::i_imm, 1, alu_srl);
+        loadRegfile(regfilemux::alu_out);
+    end
+    else begin // SLLI, XOR, OR, AND
+        setALU(alumux::rs1_out, alumux::i_imm, 1, funct3);
+        loadRegfile(regfilemux::alu_out);
+    end
+
+
+endfunction
+
+function void reg_choose_op();
+    if(arith_funct3 == add)  begin
+        if (funct7 == 7'b0100000 ) // SUB
+            setALU(alumux::rs1_out, alumux::rs2_out, 1, alu_sub);
+        else // ADD
+            setALU(alumux::rs1_out, alumux::rs2_out, 1, alu_add);
+        loadRegfile(regfilemux::alu_out);
+    end 
+    else if(arith_funct3 == slt) begin // SLT
+        setCMP(cmpmux::rs2_out, blt);
+        loadRegfile(regfilemux::br_en);
+    end
+    else if (arith_funct3 == sltu) begin // SLTU
+        setCMP(cmpmux::rs2_out, bltu);
+        loadRegfile(regfilemux::br_en);
+    end
+    else if(arith_funct3 == sr) begin // SRA, SRL
+        if (funct7 == 7'b0100000 ) // SRA
+            setALU(alumux::rs1_out, alumux::rs2_out, 1, alu_sra);
+        else // SRLI
+            setALU(alumux::rs1_out, alumux::rs2_out, 1, alu_srl);
+        loadRegfile(regfilemux::alu_out);
+    end
+    else begin // SLL, XOR, OR, AND
+        setALU(alumux::rs1_out, alumux::rs2_out, 1, funct3);
+        loadRegfile(regfilemux::alu_out);
+    end
+endfunction
+
 /*****************************************************************************/
 
     /* Remember to deal with rst signal */
@@ -211,10 +264,11 @@ begin : state_actions
         s_imm: begin 
             // 
             if(opcode == op_imm)
-                setALU(alumux::rs1_out, alumux::i_imm, 1, funct3);
-            else // Opcode is op_reg
-                setALU(alumux::rs1_out, alumux::rs2_out, 1, funct3);
-            loadRegfile(regfilemux::alu_out);
+                imm_choose_op();
+            // Opcode is op_reg
+            else begin
+                reg_choose_op();
+            end
             loadPC(pcmux::pc_plus4);
         end
 

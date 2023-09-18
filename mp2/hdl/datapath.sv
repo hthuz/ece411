@@ -171,7 +171,7 @@ always_comb begin : MUXES
 
     unique case (regfilemux_sel)
         regfilemux::alu_out : regfilemux_out = alu_out;
-        regfilemux::br_en : ;
+        regfilemux::br_en : regfilemux_out = {31'b0, br_en};
         regfilemux::u_imm : regfilemux_out = u_imm;
         regfilemux::lw : regfilemux_out = mdrreg_out;
         regfilemux::pc_plus4 : ;
