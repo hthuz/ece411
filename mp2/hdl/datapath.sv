@@ -175,10 +175,10 @@ always_comb begin : MUXES
         regfilemux::u_imm : regfilemux_out = u_imm;
         regfilemux::lw : regfilemux_out = mdrreg_out;
         regfilemux::pc_plus4 : regfilemux_out = pc_out + 4;
-        regfilemux::lb : ;
-        regfilemux::lbu : ;
-        regfilemux::lh : ;
-        regfilemux::lhu : ;
+        regfilemux::lb : regfilemux_out = {{24{mdrreg_out[7]}}, mdrreg_out[7:0]};
+        regfilemux::lbu : regfilemux_out = {{24'b0, mdrreg_out[7:0]}};
+        regfilemux::lh : regfilemux_out = {{16{mdrreg_out[15]}}, mdrreg_out[15:0]};
+        regfilemux::lhu : regfilemux_out = {16'b0, mdrreg_out[15:0]};
     endcase
 end
 /*****************************************************************************/

@@ -129,6 +129,7 @@ function void set_defaults();
 
     mem_read = 1'b0;
     mem_write = 1'b0;
+    mem_byte_enable = 4'b0000;
 
     pcmux_sel = pcmux::pc_plus4;
     alumux1_sel = alumux::rs1_out;
@@ -323,8 +324,8 @@ begin : state_actions
         s_st1: begin
             mem_write = 1'b1;
             case(store_funct3) 
-                sb : ;
-                sh : ;
+                sb : mem_byte_enable = 4'b0001;
+                sh : mem_byte_enable = 4'b0011;
                 sw : mem_byte_enable = 4'b1111;
             endcase
         end
@@ -341,7 +342,7 @@ begin : state_actions
 
         s_jalr: begin
             setALU(alumux::rs1_out, alumux::i_imm, 1, alu_add);
-            loadRegfile(regfilemu::pc_plus4);
+            loadRegfile(regfilemux::pc_plus4);
             loadPC(pcmux::alu_out);
         end
     endcase
