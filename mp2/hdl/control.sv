@@ -240,8 +240,11 @@ begin : state_actions
         s_calc_addr: begin 
             if(opcode == op_load)
                 setALU(alumux::rs1_out, alumux::i_imm, 1, alu_add);
-            else // Store
+            else begin// Store
                 setALU(alumux::rs1_out, alumux::s_imm, 1, alu_add);
+                // Store wdata beforehand to get it prepared
+                loadDataOut();
+            end
             loadMAR(marmux::alu_out);
         end
 
@@ -262,7 +265,6 @@ begin : state_actions
         end
 
         s_st1: begin
-            loadDataOut();
             mem_write = 1'b1;
         end
 
