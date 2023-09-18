@@ -26,7 +26,8 @@ import rv32i_types::*; /* Import types defined in rv32i_types.sv */
     output logic load_mdr,
     output logic load_data_out,
     output logic mem_read,
-    output logic mem_write
+    output logic mem_write,
+    output logic [3:0] mem_byte_enable
 );
 
 /***************** USED BY RVFIMON --- ONLY MODIFY WHEN TOLD *****************/
@@ -255,7 +256,7 @@ begin : state_actions
 
         s_ld2: begin 
             case(load_funct3)
-                lb : loadRegfile(regfilemux::lw);
+                lb : loadRegfile(regfilemux::lb);
                 lh : loadRegfile(regfilemux::lh);
                 lw : loadRegfile(regfilemux::lw);
                 lbu : loadRegfile(regfilemux::lbu);
@@ -266,6 +267,11 @@ begin : state_actions
 
         s_st1: begin
             mem_write = 1'b1;
+            case(store_funct3) 
+                sb : ;
+                sh : ;
+                sw : mem_byte_enable = 4'b1111;
+            endcase
         end
 
         s_st2: begin
