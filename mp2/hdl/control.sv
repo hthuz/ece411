@@ -91,13 +91,14 @@ enum int unsigned {
     /* List of states */
     s_fetch1, s_fetch2, s_fetch3,
     s_decode,
-    s_imm,
+    s_imm, // Based on opcode, do difference for reg and imm
     s_lui,
     s_auipc,
     s_br,
-    s_calc_addr,
+    s_calc_addr, // Based on opcode, go to store or load
     s_ld1, s_ld2,
-    s_st1, s_st2
+    s_st1, s_st2,
+    s_jal, s_jalr
 } state, next_state;
 
 /************************* Function Definitions *******************************/
@@ -331,6 +332,18 @@ begin : state_actions
         s_st2: begin
             loadPC(pcmux::pc_plus4);
         end
+
+        s_jal: begin
+            setALU(alumux::pc_out, alumux::j_imm, 1, alu_add);
+            loadRegfile(regfilemux::pc_plus4);
+            loadPC(pcmux::alu_out);
+        end
+
+        s_jalr: begin
+            setALU(alumux::rs1_out, alumux::i_imm, 1, alu_add);
+            loadRegfile(regfilemu::pc_plus4);
+            loadPC(pcmux::alu_out);
+        end
     endcase
 end
 
@@ -353,8 +366,8 @@ begin : next_state_logic
              case(opcode)
                  rv32i_types::op_lui: next_state = s_lui;
                  rv32i_types::op_auipc: next_state = s_auipc;
-                 rv32i_types::op_jal: ;
-                 rv32i_types::op_jalr: ;
+                 rv32i_types::op_jal: next_state = s_jal;
+                 rv32i_types::op_jalr: next_state = s_jalr;
                  rv32i_types::op_br: next_state = s_br;
                  rv32i_types::op_load: next_state = s_calc_addr;
                  rv32i_types::op_store: next_state = s_calc_addr;
@@ -388,6 +401,10 @@ begin : next_state_logic
         s_auipc:
             next_state = s_fetch1;
         s_br:
+            next_state = s_fetch1;
+        s_jal:
+            next_state = s_fetch1;
+        s_jalr:
             next_state = s_fetch1;
      endcase
 end

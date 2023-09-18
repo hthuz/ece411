@@ -174,7 +174,7 @@ always_comb begin : MUXES
         regfilemux::br_en : regfilemux_out = {31'b0, br_en};
         regfilemux::u_imm : regfilemux_out = u_imm;
         regfilemux::lw : regfilemux_out = mdrreg_out;
-        regfilemux::pc_plus4 : ;
+        regfilemux::pc_plus4 : regfilemux_out = pc_out + 4;
         regfilemux::lb : ;
         regfilemux::lbu : ;
         regfilemux::lh : ;
