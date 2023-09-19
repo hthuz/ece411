@@ -102,7 +102,7 @@ always_ff @( posedge clk ) begin :  data_out_ff
     if (rst) begin
         mem_data_out <= '0;
     end else if (load_data_out) begin
-        mem_data_out <= rs2_out;
+        mem_data_out <= (rs2_out << (mar_lower * 8));
     end
 end : data_out_ff
 

@@ -77,8 +77,8 @@ begin : trap_check
         op_store: begin
             case (store_funct3)
                 sw: wmask = 4'b1111;
-                sh: wmask = 4'b1100 /* Modify for MP2 Final */ ;
-                sb: wmask = 4'b1000 /* Modify for MP2 Final */ ;
+                sh: wmask = 4'b0011 << mar_lower[1] * 2 /* Modify for MP2 Final */ ;
+                sb: wmask = 4'b0001 << mar_lower /* Modify for MP2 Final */ ;
                 default: trap = '1;
             endcase
         end
@@ -98,7 +98,7 @@ enum int unsigned {
     s_br,
     s_calc_addr, // Based on opcode, go to store or load
     s_ld1, s_ld2,
-    s_st1, s_st2,
+    s_st1, s_st2, s_st0,
     s_jal, s_jalr
 } state, next_state;
 
@@ -300,8 +300,6 @@ begin : state_actions
                 setALU(alumux::rs1_out, alumux::i_imm, 1, alu_add);
             else begin// Store
                 setALU(alumux::rs1_out, alumux::s_imm, 1, alu_add);
-                // Store wdata beforehand to get it prepared
-                loadDataOut();
             end
             loadMAR(marmux::alu_out);
         end
@@ -322,11 +320,18 @@ begin : state_actions
             loadPC(pcmux::pc_plus4);
         end
 
+        s_st0: begin
+            // Load Data Out and mem_write can't happen at the same time
+            loadDataOut();
+        end
+
         s_st1: begin
             mem_write = 1'b1;
             case(store_funct3) 
-                sb : mem_byte_enable = 4'b0001;
-                sh : mem_byte_enable = 4'b0011;
+                sb : mem_byte_enable = 4'b0001 << mar_lower;
+                sh : mem_byte_enable = 4'b0011 << mar_lower[1] * 2;
+                // sb : mem_byte_enable = 4'b0001;
+                // sh : mem_byte_enable = 4'b0011;
                 sw : mem_byte_enable = 4'b1111;
             endcase
         end
@@ -385,7 +390,7 @@ begin : next_state_logic
             if(opcode == rv32i_types::op_load)
                 next_state = s_ld1;
             else // Store
-                next_state = s_st1;
+                next_state = s_st0;
         s_ld1:
             if(mem_resp)
                 next_state = s_ld2;
@@ -393,6 +398,8 @@ begin : next_state_logic
                 next_state = s_ld1;
         s_ld2:
             next_state = s_fetch1;
+        s_st0:
+            next_state = s_st1;    
         s_st1:
             if(mem_resp)
                 next_state = s_st2;
