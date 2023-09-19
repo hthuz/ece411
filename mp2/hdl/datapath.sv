@@ -34,7 +34,9 @@ import rv32i_types::*;
     output [31:0] j_imm,
     output [4:0] rs1,
     output [4:0] rs2,   // Index of register
-    output [4:0] rd
+    output [4:0] rd,
+
+    output [1:0] mar_lower // Lowr two bits of mar
     /* You will need to connect more signals to your datapath module*/
 );
 
@@ -84,7 +86,9 @@ always_ff @( posedge clk ) begin : mar_ff
     end
 end : mar_ff
 
-assign mem_address = mar_out;
+// Alignment, for example align 0x1003 to 0x1000 
+assign mem_address = {mar_out[31:2], 2'b0};
+assign mar_lower = mar_out[1:0];
 
 always_ff @( posedge clk ) begin : pc_ff
     if (rst) begin
@@ -175,10 +179,10 @@ always_comb begin : MUXES
         regfilemux::u_imm : regfilemux_out = u_imm;
         regfilemux::lw : regfilemux_out = mdrreg_out;
         regfilemux::pc_plus4 : regfilemux_out = pc_out + 4;
-        regfilemux::lb : regfilemux_out = {{24{mdrreg_out[7]}}, mdrreg_out[7:0]};
-        regfilemux::lbu : regfilemux_out = {{24'b0, mdrreg_out[7:0]}};
-        regfilemux::lh : regfilemux_out = {{16{mdrreg_out[15]}}, mdrreg_out[15:0]};
-        regfilemux::lhu : regfilemux_out = {16'b0, mdrreg_out[15:0]};
+        regfilemux::lb :  regfilemux_out = {{24{mdrreg_out[8 * mar_lower + 7]}}, mdrreg_out[8 * mar_lower +: 8]};
+        regfilemux::lbu :  regfilemux_out = {24'b0, mdrreg_out[8 * mar_lower +: 8]};
+        regfilemux::lh : regfilemux_out = {{16{mdrreg_out[mar_lower[1] * 16 + 15]}}, mdrreg_out[mar_lower[1] * 16 +: 16]};
+        regfilemux::lhu : regfilemux_out = {16'b0, mdrreg_out[mar_lower[1] * 16 +: 16]};
     endcase
 end
 /*****************************************************************************/

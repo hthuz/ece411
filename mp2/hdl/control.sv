@@ -11,6 +11,7 @@ import rv32i_types::*; /* Import types defined in rv32i_types.sv */
     input logic [4:0] rs1,
     input logic [4:0] rs2,
     input logic mem_resp,
+    input logic [1:0] mar_lower,
     output pcmux::pcmux_sel_t pcmux_sel,
     output alumux::alumux1_sel_t alumux1_sel,
     output alumux::alumux2_sel_t alumux2_sel,
@@ -67,8 +68,8 @@ begin : trap_check
         op_load: begin
             case (load_funct3)
                 lw: rmask = 4'b1111;
-                lh, lhu: rmask = 4'bXXXX /* Modify for MP2 Final */ ;
-                lb, lbu: rmask = 4'bXXXX /* Modify for MP2 Final */ ;
+                lh, lhu: rmask = 4'b0011 << 2 * mar_lower[1] /* Modify for MP2 Final */ ;
+                lb, lbu: rmask = 4'b0001 << mar_lower /* Modify for MP2 Final */ ;
                 default: trap = '1;
             endcase
         end
@@ -76,8 +77,8 @@ begin : trap_check
         op_store: begin
             case (store_funct3)
                 sw: wmask = 4'b1111;
-                sh: wmask = 4'bXXXX /* Modify for MP2 Final */ ;
-                sb: wmask = 4'bXXXX /* Modify for MP2 Final */ ;
+                sh: wmask = 4'b1100 /* Modify for MP2 Final */ ;
+                sb: wmask = 4'b1000 /* Modify for MP2 Final */ ;
                 default: trap = '1;
             endcase
         end
