@@ -29,10 +29,12 @@ module cache #(
 
 cache_control control
 (
+    .*
 );
 
 cache_datapath datapath
 (
+    .*
 );
 
 endmodule : cache
