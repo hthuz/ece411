@@ -349,7 +349,7 @@ begin : state_actions
         s_jalr: begin
             setALU(alumux::rs1_out, alumux::i_imm, 1, alu_add);
             loadRegfile(regfilemux::pc_plus4);
-            loadPC(pcmux::alu_out);
+            loadPC(pcmux::alu_mod2);
         end
     endcase
 end
