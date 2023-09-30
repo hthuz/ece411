@@ -138,6 +138,9 @@ function void set_defaults();
     regfilemux_sel = regfilemux::alu_out;
     marmux_sel = marmux::pc_out;
     cmpmux_sel = cmpmux::rs2_out;
+
+    aluop = alu_add;
+    cmp_op = beq;
 endfunction
 
 /**
@@ -359,6 +362,7 @@ begin : next_state_logic
     /* Next state information and conditions (if any)
      * for transitioning between states */
 
+    next_state = state;
      case(state)
          s_fetch1: 
              next_state = s_fetch2;
