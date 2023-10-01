@@ -27,6 +27,10 @@ module cache #(
     input   logic           pmem_resp
 );
 
+
+logic load_mem_rdata;
+logic hit;
+
 cache_control control
 (
     .*

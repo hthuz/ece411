@@ -8,23 +8,99 @@ module cache_datapath #(
 )(
     input clk,
     input rst,
-    input logic [31:0] mem_address
-
+    input load_mem_rdata, // from control
+    input logic [31:0] mem_address,
+    input logic [255:0] pmem_rdata,
+    output logic [255:0] mem_rdata,
+    output logic mem_resp,
+    output logic hit
 );
 
-            logic   [255:0] data_d      [4];
+    logic offset = mem_address[4:0];
+    logic index = mem_address[8:5];
+    logic tag = mem_address[31:9];
+
+    logic   [255:0] data_d      [4];
+    logic   [255:0] data_o      [4];
+    logic   valid_d               [4];
+    logic   valid_o               [4];
+    logic   hit_o                 [4];
+    logic   [s_tag - 1:0] tag_o     [4];
+    logic   we                  [4];
+
+    logic   tag_match           [4];
+
+    plru plur(
+        .we(we)
+    );
 
     genvar i;
     generate for (i = 0; i < 4; i++) begin : arrays
         mp3_data_array data_array (
             .clk0       (clk),
             .csb0       (1'b0), // Chip select, active low
-            .web0       (),     // Write enable, active low
-            .wmask0     (),     // Write mask
-            .addr0      (),
+            .web0       (we[i]),     // Write enable, active low
+            .wmask0     (32'hffffffff),     // Write mask ,32 bits
+            .addr0      (index), 
             .din0       (data_d[i]), // Write data
-            .dout0      ()      // Read data
+            .dout0      (data_o[i])      // Read data
         ); 
+
+        mp3_tag_array tag_array (
+            .clk0       (clk),
+            .csb0       (1'b0), // Chip select, active low
+            .web0       (we[i]),     // Write enable, active low
+            .addr0      (index),
+            .din0       (tag), // Write data
+            .dout0      (tag_o)      // Read data
+        ); 
+
+        ff_array valid_array (
+            .clk0       (clk),
+            .rst0       (rst),
+            .csb0       (1'b0), // Chip select, active low
+            .web0       (we),     // Write enable, active low
+            .addr0      (index),
+            .din0       (1'b1), // Write data
+            .dout0      (valid_o[i])      // Read data
+        ); 
+
+        assign tag_match[i] = (tag == tag_o[i]);
+        assign hit_o[i] = tag_match[i] & valid_o[i];
+
     end endgenerate
 
+    assign hit = hit_o[0] | hit_o[1] | hit_o[2] | hit_o[3];
+    // Select valid data to mem_rdata
+    always_comb begin
+        if(load_mem_rdata) begin
+            if(hit_o[0])
+                mem_rdata = data_o[0];
+            else if(hit_o[1])
+                mem_rdata = data_o[1];
+            else if(hit_o[2])
+                mem_rdata = data_o[2];
+            else if(hit_o[3])
+                mem_rdata = data_o[3];
+            else begin
+                // TODO if no in cache
+                mem_rdata = pmem_rdata;
+            end
+        end
+    end
+
+
+
 endmodule : cache_datapath
+
+
+
+
+
+
+
+
+
+
+
+
