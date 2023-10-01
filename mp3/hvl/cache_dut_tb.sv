@@ -6,9 +6,20 @@ module cache_dut_tb;
 
     parameter mem_addr0 = 32'h40008000;
     parameter mem_addr1 = 32'h40008042;
+    parameter mem_addr2 = 32'h40018042;
+    parameter mem_addr3 = 32'h40028042;
+    parameter mem_addr4 = 32'h40038042;
+    parameter mem_addr5 = 32'h40048042;
+
     parameter mem_nodata = 256'hffff;
+
     parameter mem_data0 = 256'h1234;
-    parameter mem_data1 = 256'h5678;
+    parameter mem_data1 = 256'h1111;
+    parameter mem_data2 = 256'h2222;
+    parameter mem_data3 = 256'h3333;
+    parameter mem_data4 = 256'h4444;
+    parameter mem_data5 = 256'h5555;
+
     parameter pmem_access_time = 10;
     int pmem_counter;
     //----------------------------------------------------------------------
@@ -162,13 +173,69 @@ module cache_dut_tb;
         else begin
             $error("%0d: %0t: Read #4 mismatch!", `__LINE__, $time);
         end
-
     endtask: do_four_reads_on_diff_index
+
+    task do_reads_on_same_index();
+
+        itf.read <= 1'b1;
+        itf.addr <= mem_addr1;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_data1)
+        else begin
+            $error("%0d: %0t: Read #1 mismatch!", `__LINE__, $time);
+        end
+
+        itf.addr <= mem_addr2;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_data2)
+        else begin
+            $error("%0d: %0t: Read #2 mismatch!", `__LINE__, $time);
+        end
+
+        itf.addr <= mem_addr3;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_data3)
+        else begin
+            $error("%0d: %0t: Read #3 mismatch!", `__LINE__, $time);
+        end
+
+        itf.addr <= mem_addr4;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_data4)
+        else begin
+            $error("%0d: %0t: Read #4 mismatch!", `__LINE__, $time);
+        end
+
+        itf.addr <= mem_addr1;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_data1)
+        else begin
+            $error("%0d: %0t: Read #1 mismatch!", `__LINE__, $time);
+        end
+
+        // Replacement
+        itf.addr <= mem_addr5;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_data5)
+        else begin
+            $error("%0d: %0t: Read #5 mismatch!", `__LINE__, $time);
+        end
+
+        itf.addr <= mem_addr3;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_data3)
+        else begin
+            $error("%0d: %0t: Read #3 mismatch!", `__LINE__, $time);
+        end
+
+        itf.read <= 1'b0;
+        repeat(8) @(posedge clk);
+    endtask : do_reads_on_same_index
 
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
-        do_one_read();
+        do_reads_on_same_index();
         $finish;
     end
 
@@ -190,6 +257,10 @@ module cache_dut_tb;
             case(pmem_address) 
                 mem_addr0: pmem_rdata <= mem_data0;
                 mem_addr1: pmem_rdata <= mem_data1;
+                mem_addr2: pmem_rdata <= mem_data2;
+                mem_addr3: pmem_rdata <= mem_data3;
+                mem_addr4: pmem_rdata <= mem_data4;
+                mem_addr5: pmem_rdata <= mem_data5;
             endcase
         end
     end
