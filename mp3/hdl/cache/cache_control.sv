@@ -3,6 +3,7 @@ module cache_control (
     input   rst,
     input logic mem_read,
     input logic mem_write,
+    output logic mem_resp,
     input logic pmem_resp,
     output logic pmem_read,
     output logic pmem_write,
@@ -27,12 +28,14 @@ begin : state_actions
     load_mem_rdata = 1'b0;
     load_cache = 1'b0;
     pmem_read = 1'b0;
+    mem_resp = 1'b0;
 
     case(state)
         s_idle: begin
         end
         s_check: begin
             load_mem_rdata = hit;
+            mem_resp = hit;
         end
 
         s_read_mem: begin
@@ -40,6 +43,7 @@ begin : state_actions
             if(pmem_resp) begin
                 load_cache = 1'b1;
                 load_mem_rdata = 1'b1;
+                mem_resp = 1'b1;
             end
         end
 

@@ -12,7 +12,6 @@ module cache_datapath #(
     input load_cache,
     output logic [255:0] mem_rdata,
     input logic [31:0] mem_address,
-    output logic mem_resp,
     input logic [255:0] pmem_rdata,
     output logic [31:0] pmem_address,
     output logic hit
