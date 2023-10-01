@@ -1,7 +1,7 @@
 
 module plru (
 
-    input logic hit,
+    input logic load_cache,
     output logic we [4]
 );
 
@@ -10,7 +10,7 @@ module plru (
         we[1] = 1'b0;
         we[2] = 1'b0;
         we[3] = 1'b0;
-        if(~hit)
+        if(load_cache)
             we[0] = 1'b1;
     end
 

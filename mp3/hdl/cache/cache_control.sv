@@ -9,7 +9,8 @@ module cache_control (
 
     input logic hit,
 
-    output logic load_mem_rdata
+    output logic load_mem_rdata,
+    output logic load_cache // On a miss load data from memory to cache
 );
 
 
@@ -24,6 +25,7 @@ always_comb
 begin : state_actions
 
     load_mem_rdata = 1'b0;
+    load_cache = 1'b0;
     pmem_read = 1'b0;
 
     case(state)
@@ -35,8 +37,10 @@ begin : state_actions
 
         s_read_mem: begin
             pmem_read = 1'b1;
-            if(pmem_resp)
+            if(pmem_resp) begin
+                load_cache = 1'b1;
                 load_mem_rdata = 1'b1;
+            end
         end
 
         s_write_mem: begin

@@ -9,29 +9,39 @@ module cache_datapath #(
     input clk,
     input rst,
     input load_mem_rdata, // from control
-    input logic [31:0] mem_address,
-    input logic [255:0] pmem_rdata,
+    input load_cache,
     output logic [255:0] mem_rdata,
+    input logic [31:0] mem_address,
     output logic mem_resp,
+    input logic [255:0] pmem_rdata,
+    output logic [31:0] pmem_address,
     output logic hit
 );
 
-    logic [4:0] offset = mem_address[4:0];
-    logic [3:0] index = mem_address[8:5];
-    logic [22:0] tag = mem_address[31:9];
+    logic [4:0] offset;
+    logic [3:0] index;
+    logic [22:0] tag;
 
-    logic   [255:0] data_d      [4];
-    logic   [255:0] data_o      [4];
-    logic   valid_d               [4];
-    logic   valid_o               [4];
-    logic   hit_o                 [4];
-    logic   [22:0] tag_o     [4];
-    logic   we                  [4];
 
-    logic   tag_match           [4];
+
+    logic   [255:0] data_d [4];
+    logic   [255:0] data_o [4];
+    logic   valid_d [4];
+    logic   valid_o [4];
+    logic   hit_o [4];
+    logic   [22:0] tag_o [4];
+    logic   we [4];
+
+    logic   tag_match [4];
+
+    assign offset = mem_address[4:0];
+    assign index = mem_address[8:5];
+    assign tag = mem_address[31:9];
+
+    assign pmem_address = mem_address;
 
     plru plur(
-        .hit(hit),
+        .load_cache(load_cache),
         .we(we)
     );
 
@@ -40,7 +50,7 @@ module cache_datapath #(
         mp3_data_array data_array (
             .clk0       (clk),
             .csb0       (1'b0), // Chip select, active low
-            .web0       (we[i]),     // Write enable, active low
+            .web0       (~we[i]),     // Write enable, active low
             .wmask0     (32'hffffffff),     // Write mask ,32 bits
             .addr0      (index), 
             .din0       (data_d[i]), // Write data
@@ -50,7 +60,7 @@ module cache_datapath #(
         mp3_tag_array tag_array (
             .clk0       (clk),
             .csb0       (1'b0), // Chip select, active low
-            .web0       (we[i]),     // Write enable, active low
+            .web0       (~we[i]),     // Write enable, active low
             .addr0      (index),
             .din0       (tag), // Write data
             .dout0      (tag_o[i])      // Read data
@@ -60,12 +70,13 @@ module cache_datapath #(
             .clk0       (clk),
             .rst0       (rst),
             .csb0       (1'b0), // Chip select, active low
-            .web0       (we[i]),     // Write enable, active low
+            .web0       (~we[i]),     // Write enable, active low
             .addr0      (index),
             .din0       (1'b1), // Write data
             .dout0      (valid_o[i])      // Read data
         ); 
 
+        assign data_d[i] = pmem_rdata;
         assign tag_match[i] = (tag == tag_o[i]);
         assign hit_o[i] = tag_match[i] & valid_o[i];
 

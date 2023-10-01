@@ -5,6 +5,7 @@ module cache_dut_tb;
 
 
     parameter mem_addr0 = 32'h40008000;
+    parameter mem_nodata = 256'hffff;
     parameter mem_data0 = 256'h1234;
     parameter pmem_access_time = 10;
     int pmem_counter;
@@ -42,9 +43,9 @@ module cache_dut_tb;
         itf.write <= 1'b0;
 
         rst <= 1'b1;
-        repeat(3) @(clk);
+        repeat(1) @(posedge clk);
         rst <= 1'b0;
-        repeat(3) @(clk);
+        repeat(3) @(posedge clk);
         // Fill this out!
     endtask : do_reset
 
@@ -94,7 +95,7 @@ module cache_dut_tb;
     task do_one_read();
         itf.read <= 1'b1;
         itf.addr <= mem_addr0;
-        repeat (15) @(clk);
+        repeat (15) @(posedge clk);
         assert(itf.rdata == mem_data0)
         else begin
             $error("%0d: %0t: Read mismatch!", `__LINE__, $time);
@@ -119,6 +120,7 @@ module cache_dut_tb;
     always @(posedge clk) begin
     //     // Set pmem signals here to behaviorally model physical memory.
         pmem_resp <= 1'b0;
+        pmem_rdata <= mem_nodata;
         if(pmem_read) begin
             pmem_counter <= pmem_counter + 1;
         end
