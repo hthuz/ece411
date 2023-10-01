@@ -39,10 +39,6 @@ module cache_datapath #(
 
     assign pmem_address = mem_address;
 
-    plru plur(
-        .load_cache(load_cache),
-        .we(we)
-    );
 
     genvar i;
     generate for (i = 0; i < 4; i++) begin : arrays
@@ -75,11 +71,23 @@ module cache_datapath #(
             .dout0      (valid_o[i])      // Read data
         ); 
 
+
         assign data_d[i] = pmem_rdata;
         assign tag_match[i] = (tag == tag_o[i]);
         assign hit_o[i] = tag_match[i] & valid_o[i];
 
     end endgenerate
+
+        plru plru (
+            .clk(clk),
+            .rst(rst),
+            .addr(index),
+            .hit_o(hit_o),
+            .valid_o(valid_o),
+            .load_cache(load_cache),
+            .hit(hit),
+            .we(we)
+        );
 
     assign hit = hit_o[0] | hit_o[1] | hit_o[2] | hit_o[3];
     // Select valid data to mem_rdata

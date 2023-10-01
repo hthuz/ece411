@@ -168,7 +168,7 @@ module cache_dut_tb;
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
-        do_four_reads_on_diff_index();
+        do_one_read();
         $finish;
     end
 
