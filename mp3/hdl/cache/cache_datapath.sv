@@ -16,16 +16,16 @@ module cache_datapath #(
     output logic hit
 );
 
-    logic offset = mem_address[4:0];
-    logic index = mem_address[8:5];
-    logic tag = mem_address[31:9];
+    logic [4:0] offset = mem_address[4:0];
+    logic [3:0] index = mem_address[8:5];
+    logic [22:0] tag = mem_address[31:9];
 
     logic   [255:0] data_d      [4];
     logic   [255:0] data_o      [4];
     logic   valid_d               [4];
     logic   valid_o               [4];
     logic   hit_o                 [4];
-    logic   [s_tag - 1:0] tag_o     [4];
+    logic   [22:0] tag_o     [4];
     logic   we                  [4];
 
     logic   tag_match           [4];
