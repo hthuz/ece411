@@ -10,10 +10,16 @@ module plru # (
     input logic valid_o [4],
     input logic load_cache,
     input logic hit,
+    input logic load_plru,
     output logic we [4]
 );
     localparam num_sets = 2**s_index;
     logic [width - 1: 0] plru_array [num_sets];
+
+    // For debugging purpose
+    logic [2:0] test_plru_entry;
+    assign test_plru_entry = plru_array[2];
+
 
     assign need_replace = valid_o[0] & valid_o[1] & valid_o[2] & valid_o[3];
 
@@ -36,20 +42,20 @@ module plru # (
             plru_array[addr][2] <= 1'b1;
         end
         end
-        if(need_replace) begin
-            if(plru_array[addr][0] & plru_array[addr][1]) begin
+        else begin
+            if(we[0]) begin
                 plru_array[addr][0] <= 1'b0;
                 plru_array[addr][1] <= 1'b0;
-            end
-            else if(plru_array[addr][0] & ~plru_array[addr][1]) begin
+            end 
+            else if(we[1]) begin
                 plru_array[addr][0] <= 1'b0;
                 plru_array[addr][1] <= 1'b1;
             end
-            else if(~plru_array[addr][0] & plru_array[addr][2]) begin
+            else if(we[2]) begin
                 plru_array[addr][0] <= 1'b1;
                 plru_array[addr][2] <= 1'b0;
             end
-            else  begin
+            else if(we[3]) begin
                 plru_array[addr][0] <= 1'b1;
                 plru_array[addr][2] <= 1'b1;
             end
@@ -87,7 +93,7 @@ module plru # (
                 plru_array[i] <= '0;
             end 
         end else begin
-            if(hit | need_replace)
+            if(load_plru)
                 update_lru();
         end
     end

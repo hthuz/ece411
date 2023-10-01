@@ -11,7 +11,8 @@ module cache_control (
     input logic hit,
 
     output logic load_mem_rdata,
-    output logic load_cache // On a miss load data from memory to cache
+    output logic load_cache, // On a miss load data from memory to cache
+    output logic load_plru
 );
 
 
@@ -27,6 +28,7 @@ begin : state_actions
 
     load_mem_rdata = 1'b0;
     load_cache = 1'b0;
+    load_plru = 1'b0;
     pmem_read = 1'b0;
     mem_resp = 1'b0;
 
@@ -36,6 +38,7 @@ begin : state_actions
         s_check: begin
             load_mem_rdata = hit;
             mem_resp = hit;
+            load_plru = hit;
         end
 
         s_read_mem: begin
@@ -44,6 +47,7 @@ begin : state_actions
                 load_cache = 1'b1;
                 load_mem_rdata = 1'b1;
                 mem_resp = 1'b1;
+                load_plru = 1'b1;
             end
         end
 

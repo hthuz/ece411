@@ -10,6 +10,7 @@ module cache_datapath #(
     input rst,
     input load_mem_rdata, // from control
     input load_cache,
+    input load_plru,
     output logic [255:0] mem_rdata,
     input logic [31:0] mem_address,
     input logic [255:0] pmem_rdata,
@@ -86,6 +87,7 @@ module cache_datapath #(
             .valid_o(valid_o),
             .load_cache(load_cache),
             .hit(hit),
+            .load_plru(load_plru),
             .we(we)
         );
 
