@@ -4,8 +4,8 @@ module cache_control (
     input logic mem_read,
     input logic mem_write,
     input logic pmem_resp,
-    input logic pmem_read,
-    input logic pmem_write,
+    output logic pmem_read,
+    output logic pmem_write,
 
     input logic hit,
 
@@ -24,6 +24,7 @@ always_comb
 begin : state_actions
 
     load_mem_rdata = 1'b0;
+    pmem_read = 1'b0;
 
     case(state)
         s_idle: begin

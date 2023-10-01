@@ -1,6 +1,7 @@
 
 module plru (
 
+    input logic hit,
     output logic we [4]
 );
 

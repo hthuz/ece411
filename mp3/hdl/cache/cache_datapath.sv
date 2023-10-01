@@ -31,6 +31,7 @@ module cache_datapath #(
     logic   tag_match           [4];
 
     plru plur(
+        .hit(hit),
         .we(we)
     );
 
@@ -52,14 +53,14 @@ module cache_datapath #(
             .web0       (we[i]),     // Write enable, active low
             .addr0      (index),
             .din0       (tag), // Write data
-            .dout0      (tag_o)      // Read data
+            .dout0      (tag_o[i])      // Read data
         ); 
 
         ff_array valid_array (
             .clk0       (clk),
             .rst0       (rst),
             .csb0       (1'b0), // Chip select, active low
-            .web0       (we),     // Write enable, active low
+            .web0       (we[i]),     // Write enable, active low
             .addr0      (index),
             .din0       (1'b1), // Write data
             .dout0      (valid_o[i])      // Read data

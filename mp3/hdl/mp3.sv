@@ -65,7 +65,7 @@ logic pmem_resp;
         .pmem_write(pmem_write), 
         .pmem_rdata(pmem_rdata),            // 256 bits
         .pmem_wdata(pmem_wdata),
-        .pmme_resp(pmem_resp)
+        .pmem_resp(pmem_resp)
     );
 
     // Anything else?
