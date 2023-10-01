@@ -102,13 +102,26 @@ module cache_dut_tb;
         end
 
         itf.read <= 1'b0;
-
     endtask : do_one_read
+
+    task do_two_reads();
+        itf.read <= 1'b1;
+        itf.addr <= mem_addr0;
+        repeat (15) @(posedge clk);
+        itf.read <= 1'b0;
+        repeat (3) @(posedge clk);
+        itf.read <= 1'b1;
+        itf.addr <= mem_addr0;
+        assert(itf.rdata == mem_data0)
+        else begin
+            $error("%0d: %0t: Read mismatch!", `__LINE__, $time);
+        end
+    endtask: do_two_reads
 
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
-        do_one_read();
+        do_two_reads();
         $finish;
     end
 
