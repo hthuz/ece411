@@ -51,8 +51,9 @@ module cache_datapath #(
     always_comb begin
         if(pmem_write) begin
             pmem_address = {tag_o[plru_way],index, offset};
-        end else 
+        end else begin
             pmem_address = mem_address;
+        end
     end
 
     assign dirty = dirty_o[plru_way];
@@ -112,19 +113,19 @@ module cache_datapath #(
 
     end endgenerate
 
-        plru plru (
-            .clk(clk),
-            .rst(rst),
-            .addr(index),
-            .hit_o(hit_o),
-            .valid_o(valid_o),
-            .load_cache(load_cache),
-            .hit(hit),
-            .load_plru(load_plru),
-            .mem_write(mem_write),
-            .we(we),
-            .plru_way(plru_way)
-        );
+    plru plru (
+        .clk(clk),
+        .rst(rst),
+        .addr(index),
+        .hit_o(hit_o),
+        .valid_o(valid_o),
+        .load_cache(load_cache),
+        .hit(hit),
+        .load_plru(load_plru),
+        .mem_write(mem_write),
+        .we(we),
+        .plru_way(plru_way)
+    );
 
     assign hit = hit_o[0] | hit_o[1] | hit_o[2] | hit_o[3];
     // Select valid data to mem_rdata

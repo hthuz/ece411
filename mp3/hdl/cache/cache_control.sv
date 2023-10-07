@@ -23,8 +23,8 @@ module cache_control (
 enum int unsigned {
     s_idle,
     s_check,
-    s_read_mem,
-    s_write_mem
+    s_allocate,
+    s_write_back
 } state, next_state;
 
 always_comb 
@@ -34,6 +34,7 @@ begin : state_actions
     load_cache = 1'b0;
     load_plru = 1'b0;
     pmem_read = 1'b0;
+    pmem_write = 1'b0;
     mem_resp = 1'b0;
 
     load_dirty[0] = 1'b0;
@@ -51,7 +52,7 @@ begin : state_actions
             load_plru = hit;
         end
 
-        s_read_mem: begin
+        s_allocate: begin
             pmem_read = 1'b1;
             if(pmem_resp) begin
                 load_cache = 1'b1;
@@ -59,14 +60,18 @@ begin : state_actions
                 mem_resp = 1'b1;
                 load_plru = 1'b1;
                 load_dirty[plru_way] = 1'b1;
+                if(mem_read)
+                    dirty_value = 1'b0;
             end
         end
 
-        s_write_mem: begin
+        s_write_back: begin
             pmem_write = 1'b1;
             if(pmem_resp) begin
                 load_cache = 1'b1;
-                mem_resp = 1'b1;
+                if(~mem_read) begin
+                    mem_resp = 1'b1;
+                end
                 load_plru = 1'b1;
                 load_dirty[plru_way] = 1'b1;
             end
@@ -89,21 +94,27 @@ begin: next_state_logic
             if(hit)
                 next_state = s_idle;
             else begin
-                if(mem_read | (mem_write & ~dirty))
-                    next_state = s_read_mem;
-                else if (mem_write & dirty)
-                    next_state = s_write_mem;
+                if(dirty)
+                    next_state = s_write_back;
+                else 
+                    next_state = s_allocate;
+                // if(mem_read | (mem_write & ~dirty))
+                //     next_state = s_read_mem;
+                // else if (mem_write & dirty)
+                //     next_state = s_write_mem;
             end
-        s_read_mem: 
+        s_allocate: 
             if(pmem_resp)
                 next_state = s_idle;
             else
-                next_state = s_read_mem;
-        s_write_mem: 
-            if(pmem_resp)
+                next_state = s_allocate;
+        s_write_back: 
+            if(!pmem_resp)
+                next_state = s_write_back;
+            else if (mem_read)
+                next_state = s_allocate;
+            else
                 next_state = s_idle;
-            else 
-                next_state = s_write_mem;
     endcase
 
 end

@@ -294,6 +294,15 @@ module cache_dut_tb;
         itf.wdata <= mem_wdata2;
         @(posedge clk iff itf.resp == 1'b1);
         itf.write <= 1'b0;
+        itf.read <= 1'b1;
+        // Read miss
+        itf.addr <= mem_addr1;
+        @(posedge clk iff itf.resp == 1'b1);
+        itf.read <= 1'b0;
+        assert(itf.rdata == mem_wdata1)
+        else begin
+            $error("%0d: %0t: Read mismatch!", `__LINE__, $time);
+        end
         repeat(10) @(posedge clk);
     endtask : do_write_on_same_index
 
@@ -309,7 +318,7 @@ module cache_dut_tb;
     //----------------------------------------------------------------------
     // You likely want a process for pmem responses, like this:
     //----------------------------------------------------------------------
-    logic [255:0] mem_arr [16];
+    logic [255:0] mem_arr [6];
     always @(posedge clk) begin
 
         // Set pmem signals here to behaviorally model physical memory.
