@@ -15,7 +15,7 @@ module cache_dut_tb;
 
     parameter mem_nodata = 256'hffff;
 
-    parameter mem_data0 = 256'h1234;
+    parameter mem_data0 = 256'h0000;
     parameter mem_data1 = 256'h1111;
     parameter mem_data2 = 256'h2222;
     parameter mem_data3 = 256'h3333;
@@ -283,20 +283,24 @@ module cache_dut_tb;
 
     task do_write_on_same_index();
         itf.write <= 1'b1;
-        itf.addr <= mem_addr1;
+
         itf.wdata <= mem_wdata1;
+        itf.addr <= mem_addr1;
         @(posedge clk iff itf.resp == 1'b1);
+        itf.wdata <= mem_wdata2;
         itf.addr <= mem_addr2;
         @(posedge clk iff itf.resp == 1'b1);
+        itf.wdata <= mem_wdata3;
         itf.addr <= mem_addr3;
         @(posedge clk iff itf.resp == 1'b1);
+        itf.wdata <= mem_wdata4;
         itf.addr <= mem_addr4;
         @(posedge clk iff itf.resp == 1'b1);
-        // repeat(10) @(posedge clk);
         // Write back should happen
         itf.addr <= mem_addr5;
-        itf.wdata <= mem_wdata2;
+        itf.wdata <= mem_wdata5;
         @(posedge clk iff itf.resp == 1'b1);
+
         itf.write <= 1'b0;
         itf.read <= 1'b1;
         // Read miss
@@ -313,7 +317,8 @@ module cache_dut_tb;
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
-        do_two_write_on_same_addr();
+        // do_reads_on_same_index();
+        do_write_on_same_index();
         $finish;
     end
 

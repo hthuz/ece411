@@ -37,7 +37,7 @@ begin : state_actions
     pmem_read = 1'b0;
     pmem_write = 1'b0;
     mem_resp = 1'b0;
-    dirty_value = 1'b1;
+    dirty_value = 1'b0;
 
     case(state)
         s_idle: begin
@@ -59,6 +59,7 @@ begin : state_actions
                 load_cache = 1'b1;
                 load_mem_rdata = mem_read;
                 load_mem_wdata = mem_write;
+                dirty_value = mem_write;
                 mem_resp = 1'b1;
                 load_plru = 1'b1;
             end
@@ -66,9 +67,6 @@ begin : state_actions
 
         s_write_back: begin
             pmem_write = 1'b1;
-            if(pmem_resp) begin
-                load_cache = 1'b1;
-            end
         end
     endcase
 end
