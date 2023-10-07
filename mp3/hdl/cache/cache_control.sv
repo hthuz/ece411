@@ -13,9 +13,9 @@ module cache_control (
     input logic [1:0] plru_way,
 
     output logic load_mem_rdata,
+    output logic load_mem_wdata,
     output logic load_cache, // On a miss load data from memory to cache
     output logic load_plru,
-    output logic load_dirty[4],
     output logic dirty_value
 );
 
@@ -31,23 +31,24 @@ always_comb
 begin : state_actions
 
     load_mem_rdata = 1'b0;
+    load_mem_wdata = 1'b0;
     load_cache = 1'b0;
     load_plru = 1'b0;
     pmem_read = 1'b0;
     pmem_write = 1'b0;
     mem_resp = 1'b0;
+    dirty_value = 1'b0;
 
-    load_dirty[0] = 1'b0;
-    load_dirty[1] = 1'b0;
-    load_dirty[2] = 1'b0;
-    load_dirty[3] = 1'b0;
-
-    dirty_value = 1'b1;
     case(state)
         s_idle: begin
         end
         s_check: begin
-            load_mem_rdata = hit;
+            if(mem_read)
+                load_mem_rdata = hit;
+            if(mem_write) begin
+                load_mem_wdata = hit;
+                load_cache = hit;
+            end
             mem_resp = hit;
             load_plru = hit;
         end
@@ -56,25 +57,16 @@ begin : state_actions
             pmem_read = 1'b1;
             if(pmem_resp) begin
                 load_cache = 1'b1;
-                load_mem_rdata = 1'b1;
+                load_mem_rdata = mem_read;
+                load_mem_wdata = mem_write;
+                dirty_value = mem_write;
                 mem_resp = 1'b1;
                 load_plru = 1'b1;
-                load_dirty[plru_way] = 1'b1;
-                if(mem_read)
-                    dirty_value = 1'b0;
             end
         end
 
         s_write_back: begin
             pmem_write = 1'b1;
-            if(pmem_resp) begin
-                load_cache = 1'b1;
-                if(~mem_read) begin
-                    mem_resp = 1'b1;
-                end
-                load_plru = 1'b1;
-                load_dirty[plru_way] = 1'b1;
-            end
         end
     endcase
 end
@@ -98,10 +90,6 @@ begin: next_state_logic
                     next_state = s_write_back;
                 else 
                     next_state = s_allocate;
-                // if(mem_read | (mem_write & ~dirty))
-                //     next_state = s_read_mem;
-                // else if (mem_write & dirty)
-                //     next_state = s_write_mem;
             end
         s_allocate: 
             if(pmem_resp)
@@ -109,12 +97,10 @@ begin: next_state_logic
             else
                 next_state = s_allocate;
         s_write_back: 
-            if(!pmem_resp)
-                next_state = s_write_back;
-            else if (mem_read)
+            if(pmem_resp)
                 next_state = s_allocate;
-            else
-                next_state = s_idle;
+            else 
+                next_state = s_write_back;
     endcase
 
 end
