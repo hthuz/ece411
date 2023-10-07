@@ -186,7 +186,6 @@ module cache_dut_tb;
     endtask: do_four_reads_on_diff_index
 
     task do_reads_on_same_index();
-
         itf.read <= 1'b1;
         itf.addr <= mem_addr1;
         @(posedge clk iff itf.resp == 1'b1);
@@ -314,11 +313,35 @@ module cache_dut_tb;
         repeat(10) @(posedge clk);
     endtask : do_write_on_same_index
 
+    task do_read_until_full_then_write();
+        itf.read <= 1'b1;
+        itf.addr <= mem_addr1;
+        @(posedge clk iff itf.resp == 1'b1);
+        itf.addr <= mem_addr2;
+        @(posedge clk iff itf.resp == 1'b1);
+        itf.addr <= mem_addr3;
+        @(posedge clk iff itf.resp == 1'b1);
+        itf.addr <= mem_addr4;
+        @(posedge clk iff itf.resp == 1'b1);
+
+        // Do write, there should be no write back
+        itf.read <= 1'b0;
+        itf.write <= 1'b1;
+        itf.wdata <= mem_wdata1;
+        itf.addr <= mem_addr5;
+        @(posedge clk iff itf.resp == 1'b1);
+        itf.write <= 1'b0;
+        repeat(15) @(posedge clk);
+
+
+
+    endtask : do_read_until_full_then_write
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
         // do_reads_on_same_index();
-        do_write_on_same_index();
+        // do_write_on_same_index();
+        do_read_until_full_then_write();
         $finish;
     end
 
