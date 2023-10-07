@@ -8,11 +8,10 @@ module plru # (
     input [3:0] addr,
     input logic hit_o [4],
     input logic valid_o [4],
-    input logic dirty_o [4],
     input logic load_cache,
     input logic hit,
     input logic load_plru,
-    output [1:0] plru_way,
+    output logic [1:0] plru_way,
     output logic we [4]
 );
     localparam num_sets = 2**s_index;
@@ -125,30 +124,30 @@ module plru # (
     always_comb begin
         if(need_replace) begin
             if(plru_array[addr][0] & plru_array[addr][1]) begin
-                plru_way = 2'd0;
+                plru_way = 2'b00;
             end
             else if(plru_array[addr][0] & ~plru_array[addr][1]) begin
-                plru_way = 2'd1;
+                plru_way = 2'b01;
             end
             else if(~plru_array[addr][0] & plru_array[addr][2]) begin
-                plru_way = 2'd2;
+                plru_way = 2'b10;
             end
             else begin
-                plru_way = 2'd3;
+                plru_way = 2'b11;
             end
         end
         else begin
             if(~valid_o[0]) begin
-                plru_way = 2'd0;
+                plru_way = 2'b00;
             end
             else if(~valid_o[1]) begin
-                plru_way = 2'd1;
+                plru_way = 2'b01;
             end
             else if(~valid_o[2]) begin
-                plru_way = 2'd2;
+                plru_way = 2'b10;
             end
             else begin
-                plru_way = 2'd3;
+                plru_way = 2'b11;
             end
         end
     end

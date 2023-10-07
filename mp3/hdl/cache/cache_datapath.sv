@@ -11,8 +11,9 @@ module cache_datapath #(
     input load_mem_rdata, // from control
     input load_cache,
     input load_plru,
-    input load_dirty[4],
+    input logic load_dirty [4],
     input mem_write,
+    input mem_read,
     output logic [255:0] mem_rdata,
     input logic [31:0] mem_address,
     input logic [255:0] mem_wdata,
@@ -110,18 +111,17 @@ module cache_datapath #(
             .addr(index),
             .hit_o(hit_o),
             .valid_o(valid_o),
-            .dirty_o(dirty_o),
             .load_cache(load_cache),
             .hit(hit),
             .load_plru(load_plru),
             .we(we),
-            .dirty(dirty)
+            .plru_way(plru_way)
         );
 
     assign hit = hit_o[0] | hit_o[1] | hit_o[2] | hit_o[3];
     // Select valid data to mem_rdata
     always_comb begin
-        if(load_mem_rdata) begin
+        if(load_mem_rdata & mem_read) begin
             if(hit_o[0])
                 mem_rdata = data_o[0];
             else if(hit_o[1])

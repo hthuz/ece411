@@ -55,6 +55,7 @@ module cache_dut_tb;
         itf.read <= 1'b0;
         itf.write <= 1'b0;
 
+        // repeat(1) @(posedge clk);
         rst <= 1'b1;
         repeat(1) @(posedge clk);
         rst <= 1'b0;
@@ -232,10 +233,29 @@ module cache_dut_tb;
         repeat(8) @(posedge clk);
     endtask : do_reads_on_same_index
 
+    task do_one_write();
+        // Address is no given until read/write starts
+        // Before address is given, cache output is invalid
+        itf.write <= 1'b1;
+        itf.addr <= mem_addr1;
+        itf.wdata <= mem_data2;
+        // repeat(15) @(posedge clk);
+        // itf.write <= 1'b0;
+        @(posedge clk iff itf.resp == 1'b1);
+        itf.write <= 1'b0;
+        itf.read <= 1'b1;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_data2)
+        else begin
+            $error("%0d: %0t: Write Wrong!", `__LINE__, $time);
+        end
+        itf.read <= 1'b0;
+    endtask : do_one_write
+
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
-        do_reads_on_same_index();
+        do_one_write();
         $finish;
     end
 

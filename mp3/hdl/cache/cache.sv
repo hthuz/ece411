@@ -31,6 +31,7 @@ module cache #(
 logic load_mem_rdata;
 logic load_cache;
 logic load_plru;
+logic load_dirty [4];
 logic hit;
 logic dirty;
 logic [1:0] plru_way;
