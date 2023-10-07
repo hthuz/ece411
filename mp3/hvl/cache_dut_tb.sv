@@ -309,7 +309,7 @@ module cache_dut_tb;
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
-        do_write_on_same_index();
+        do_one_read();
         $finish;
     end
 

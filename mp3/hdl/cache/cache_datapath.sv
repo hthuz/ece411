@@ -11,10 +11,8 @@ module cache_datapath #(
     input load_mem_rdata, // from control
     input load_cache,
     input load_plru,
-    input logic load_dirty [4],
     input logic dirty_value,
     input mem_write,
-    input mem_read,
     output logic [255:0] mem_rdata,
     input logic [31:0] mem_address,
     input logic [255:0] mem_wdata,
@@ -40,7 +38,7 @@ module cache_datapath #(
     logic   dirty_o [4];
     logic   hit_o [4];
     logic   [22:0] tag_o [4];
-    logic   we [4];
+    logic   load_data[4];
 
     logic   tag_match [4];
 
@@ -58,12 +56,23 @@ module cache_datapath #(
 
     assign dirty = dirty_o[plru_way];
 
+    // When to load cache
+    always_comb begin
+        load_data[0] = 1'b0;
+        load_data[1] = 1'b0;
+        load_data[2] = 1'b0;
+        load_data[3] = 1'b0;
+        if(load_cache) begin
+            load_data[plru_way] = 1'b1;
+        end
+    end
+
     genvar i;
     generate for (i = 0; i < 4; i++) begin : arrays
         mp3_data_array data_array (
             .clk0       (clk),
             .csb0       (1'b0), // Chip select, active low
-            .web0       (~we[i]),     // Write enable, active low
+            .web0       (~load_data[i]),     // Write enable, active low
             .wmask0     (32'hffffffff),     // Write mask ,32 bits
             .addr0      (index), 
             .din0       (data_d[i]), // Write data
@@ -73,7 +82,7 @@ module cache_datapath #(
         mp3_tag_array tag_array (
             .clk0       (clk),
             .csb0       (1'b0), // Chip select, active low
-            .web0       (~we[i]),     // Write enable, active low
+            .web0       (~load_data[i]),     // Write enable, active low
             .addr0      (index),
             .din0       (tag), // Write data
             .dout0      (tag_o[i])      // Read data
@@ -83,7 +92,7 @@ module cache_datapath #(
             .clk0       (clk),
             .rst0       (rst),
             .csb0       (1'b0), // Chip select, active low
-            .web0       (~we[i]),     // Write enable, active low
+            .web0       (~load_data[i]),     // Write enable, active low
             .addr0      (index),
             .din0       (1'b1), // Write data
             .dout0      (valid_o[i])      // Read data
@@ -93,7 +102,7 @@ module cache_datapath #(
             .clk0       (clk),
             .rst0       (rst),
             .csb0       (1'b0), // Chip select, active low
-            .web0       (~load_dirty[i]),     // Write enable, active low
+            .web0       (~load_data[i]),     // Write enable, active low
             .addr0      (index),
             .din0       (dirty_value), // Write data
             .dout0      (dirty_o[i])      // Read data
@@ -119,18 +128,15 @@ module cache_datapath #(
         .addr(index),
         .hit_o(hit_o),
         .valid_o(valid_o),
-        .load_cache(load_cache),
         .hit(hit),
         .load_plru(load_plru),
-        .mem_write(mem_write),
-        .we(we),
         .plru_way(plru_way)
     );
 
     assign hit = hit_o[0] | hit_o[1] | hit_o[2] | hit_o[3];
     // Select valid data to mem_rdata
     always_comb begin
-        if(load_mem_rdata & mem_read) begin
+        if(load_mem_rdata) begin
             if(hit_o[0])
                 mem_rdata = data_o[0];
             else if(hit_o[1])

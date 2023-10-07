@@ -8,12 +8,9 @@ module plru # (
     input [3:0] addr,
     input logic hit_o [4],
     input logic valid_o [4],
-    input logic load_cache,
     input logic hit,
     input logic load_plru,
-    input logic mem_write,
-    output logic [1:0] plru_way,
-    output logic we [4]
+    output logic [1:0] plru_way
 );
     localparam num_sets = 2**s_index;
     logic [width - 1: 0] plru_array [num_sets];
@@ -45,19 +42,19 @@ module plru # (
         end
         end
         else begin
-            if(we[0]) begin
+            if(plru_way == 2'b00) begin
                 plru_array[addr][0] <= 1'b0;
                 plru_array[addr][1] <= 1'b0;
             end 
-            else if(we[1]) begin
+            else if(plru_way == 2'b01) begin
                 plru_array[addr][0] <= 1'b0;
                 plru_array[addr][1] <= 1'b1;
             end
-            else if(we[2]) begin
+            else if(plru_way == 2'b10) begin
                 plru_array[addr][0] <= 1'b1;
                 plru_array[addr][2] <= 1'b0;
             end
-            else if(we[3]) begin
+            else if(plru_way == 2'b11) begin
                 plru_array[addr][0] <= 1'b1;
                 plru_array[addr][2] <= 1'b1;
             end
@@ -66,37 +63,6 @@ module plru # (
     endfunction
 
     // When all sets are full
-    function void do_replace_decision();
-        if(plru_array[addr][0] & plru_array[addr][1]) begin
-            we[0] = 1'b1;
-        end
-        else if(plru_array[addr][0] & ~plru_array[addr][1]) begin
-            we[1] = 1'b1;
-        end
-        else if(~plru_array[addr][0] & plru_array[addr][2]) begin
-            we[2] = 1'b1;
-        end
-        else begin
-            we[3] = 1'b1;
-        end
-    endfunction
-
-    // When some sets are empty
-    function void do_find_empty();
-        if(~valid_o[0]) begin
-            we[0] = 1'b1;
-        end
-        else if(~valid_o[1]) begin
-            we[1] = 1'b1;
-        end
-        else if(~valid_o[2]) begin
-            we[2] = 1'b1;
-        end
-        else begin
-            we[3] = 1'b1;
-        end
-    endfunction
-
     always_ff @(posedge clk) begin
         if (rst) begin
             for(int i = 0; i < num_sets; i++) begin
@@ -105,28 +71,6 @@ module plru # (
         end else begin
             if(load_plru)
                 update_lru();
-        end
-    end
-
-    always_comb begin 
-        we[0] = 1'b0;
-        we[1] = 1'b0;
-        we[2] = 1'b0;
-        we[3] = 1'b0;
-        if(load_cache) begin
-            if(need_replace)
-                do_replace_decision();
-            else
-                do_find_empty();
-        end else if (mem_write & hit) begin
-            if(hit_o[0])
-                we[0] = 1'b1;
-            else if (hit_o[1]) 
-                we[1] = 1'b1;
-            else if (hit_o[2])
-                we[2] = 1'b1;
-            else if (hit_o[3])
-                we[3] = 1'b1;
         end
     end
 
