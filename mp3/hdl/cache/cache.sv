@@ -29,6 +29,7 @@ module cache #(
 
 
 logic load_mem_rdata;
+logic load_mem_wdata;
 logic load_cache;
 logic load_plru;
 logic hit;

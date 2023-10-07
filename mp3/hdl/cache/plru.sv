@@ -76,7 +76,17 @@ module plru # (
 
     // Evaluate if cache is dirty
     always_comb begin
-        if(need_replace) begin
+        if(hit) begin
+            if(hit_o[0])
+                plru_way = 2'b00;
+            else if (hit_o[1])
+                plru_way = 2'b01;
+            else if (hit_o[2])
+                plru_way = 2'b10;
+            else if (hit_o[3])
+                plru_way = 2'b11;
+        end
+        else if(need_replace) begin
             if(plru_array[addr][0] & plru_array[addr][1]) begin
                 plru_way = 2'b00;
             end

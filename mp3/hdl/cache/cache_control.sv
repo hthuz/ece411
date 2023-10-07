@@ -13,6 +13,7 @@ module cache_control (
     input logic [1:0] plru_way,
 
     output logic load_mem_rdata,
+    output logic load_mem_wdata,
     output logic load_cache, // On a miss load data from memory to cache
     output logic load_plru,
     output logic dirty_value
@@ -30,6 +31,7 @@ always_comb
 begin : state_actions
 
     load_mem_rdata = 1'b0;
+    load_mem_wdata = 1'b0;
     load_cache = 1'b0;
     load_plru = 1'b0;
     pmem_read = 1'b0;
@@ -41,7 +43,12 @@ begin : state_actions
         s_idle: begin
         end
         s_check: begin
-            load_mem_rdata = hit & mem_read;
+            if(mem_read)
+                load_mem_rdata = hit;
+            if(mem_write) begin
+                load_mem_wdata = hit;
+                load_cache = hit;
+            end
             mem_resp = hit;
             load_plru = hit;
         end
@@ -51,6 +58,7 @@ begin : state_actions
             if(pmem_resp) begin
                 load_cache = 1'b1;
                 load_mem_rdata = mem_read;
+                load_mem_wdata = mem_write;
                 mem_resp = 1'b1;
                 load_plru = 1'b1;
             end

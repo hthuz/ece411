@@ -25,6 +25,9 @@ module cache_dut_tb;
     parameter mem_wdata0 = 256'hf000;
     parameter mem_wdata1 = 256'hf111;
     parameter mem_wdata2 = 256'hf222;
+    parameter mem_wdata3 = 256'hf333;
+    parameter mem_wdata4 = 256'hf444;
+    parameter mem_wdata5 = 256'hf555; 
 
     parameter pmem_access_time = 10;
     int pmem_counter;
@@ -275,6 +278,7 @@ module cache_dut_tb;
             $error("%0d: %0t: Write Wrong!", `__LINE__, $time);
         end
         itf.read <= 1'b0;
+        repeat(15) @(posedge clk);
     endtask : do_two_write_on_same_addr
 
     task do_write_on_same_index();
@@ -309,7 +313,7 @@ module cache_dut_tb;
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
-        do_one_read();
+        do_two_write_on_same_addr();
         $finish;
     end
 

@@ -9,10 +9,10 @@ module cache_datapath #(
     input clk,
     input rst,
     input load_mem_rdata, // from control
+    input load_mem_wdata,
     input load_cache,
     input load_plru,
     input logic dirty_value,
-    input mem_write,
     output logic [255:0] mem_rdata,
     input logic [31:0] mem_address,
     input logic [255:0] mem_wdata,
@@ -110,7 +110,7 @@ module cache_datapath #(
 
 
         always_comb begin
-            if(mem_write) begin
+            if(load_mem_wdata) begin
                 data_d[i] = mem_wdata;
             end else begin
                 data_d[i] = pmem_rdata;
