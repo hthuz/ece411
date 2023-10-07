@@ -35,6 +35,7 @@ logic load_dirty [4];
 logic hit;
 logic dirty;
 logic [1:0] plru_way;
+logic dirty_value;
 
 cache_control control
 (

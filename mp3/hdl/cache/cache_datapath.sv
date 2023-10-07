@@ -12,12 +12,14 @@ module cache_datapath #(
     input load_cache,
     input load_plru,
     input logic load_dirty [4],
+    input logic dirty_value,
     input mem_write,
     input mem_read,
     output logic [255:0] mem_rdata,
     input logic [31:0] mem_address,
     input logic [255:0] mem_wdata,
     input logic [255:0] pmem_rdata,
+    input logic pmem_write,
     output logic [31:0] pmem_address,
     output logic [255:0] pmem_wdata,
     output logic hit,
@@ -46,7 +48,12 @@ module cache_datapath #(
     assign index = mem_address[8:5];
     assign tag = mem_address[31:9];
 
-    assign pmem_address = mem_address;
+    always_comb begin
+        if(pmem_write) begin
+            pmem_address = {tag_o[plru_way],index, offset};
+        end else 
+            pmem_address = mem_address;
+    end
 
     assign dirty = dirty_o[plru_way];
 
@@ -87,7 +94,7 @@ module cache_datapath #(
             .csb0       (1'b0), // Chip select, active low
             .web0       (~load_dirty[i]),     // Write enable, active low
             .addr0      (index),
-            .din0       (1'b1), // Write data
+            .din0       (dirty_value), // Write data
             .dout0      (dirty_o[i])      // Read data
         ); 
 
@@ -132,9 +139,15 @@ module cache_datapath #(
             else if(hit_o[3])
                 mem_rdata = data_o[3];
             else begin
-                // TODO if no in cache
+                // TODO if not in cache
                 mem_rdata = pmem_rdata;
             end
+        end
+    end
+
+    always_comb begin
+        if(pmem_write) begin
+            pmem_wdata = data_o[plru_way];
         end
     end
 

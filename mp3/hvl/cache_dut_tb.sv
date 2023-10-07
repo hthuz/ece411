@@ -4,7 +4,9 @@ module cache_dut_tb;
     timeprecision 1ns;
 
 
+    // Index is 0
     parameter mem_addr0 = 32'h40008000;
+    // The following address all have index 2
     parameter mem_addr1 = 32'h40008042;
     parameter mem_addr2 = 32'h40018042;
     parameter mem_addr3 = 32'h40028042;
@@ -19,6 +21,10 @@ module cache_dut_tb;
     parameter mem_data3 = 256'h3333;
     parameter mem_data4 = 256'h4444;
     parameter mem_data5 = 256'h5555;
+
+    parameter mem_wdata0 = 256'hf000;
+    parameter mem_wdata1 = 256'hf111;
+    parameter mem_wdata2 = 256'hf222;
 
     parameter pmem_access_time = 10;
     int pmem_counter;
@@ -269,15 +275,32 @@ module cache_dut_tb;
             $error("%0d: %0t: Write Wrong!", `__LINE__, $time);
         end
         itf.read <= 1'b0;
-
-
     endtask : do_two_write_on_same_addr
+
+    task do_write_on_same_index();
+        itf.write <= 1'b1;
+        itf.addr <= mem_addr1;
+        itf.wdata <= mem_wdata1;
+        @(posedge clk iff itf.resp == 1'b1);
+        itf.addr <= mem_addr2;
+        @(posedge clk iff itf.resp == 1'b1);
+        itf.addr <= mem_addr3;
+        @(posedge clk iff itf.resp == 1'b1);
+        itf.addr <= mem_addr4;
+        @(posedge clk iff itf.resp == 1'b1);
+        // repeat(10) @(posedge clk);
+        // Write back should happen
+        itf.addr <= mem_addr5;
+        itf.wdata <= mem_wdata2;
+        @(posedge clk iff itf.resp == 1'b1);
+        itf.write <= 1'b0;
+        repeat(10) @(posedge clk);
+    endtask : do_write_on_same_index
 
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
-        // do_one_write();
-        do_two_write_on_same_addr();
+        do_write_on_same_index();
         $finish;
     end
 
@@ -286,23 +309,47 @@ module cache_dut_tb;
     //----------------------------------------------------------------------
     // You likely want a process for pmem responses, like this:
     //----------------------------------------------------------------------
+    logic [255:0] mem_arr [16];
     always @(posedge clk) begin
-    //     // Set pmem signals here to behaviorally model physical memory.
+
+        // Set pmem signals here to behaviorally model physical memory.
         pmem_resp <= 1'b0;
         pmem_rdata <= mem_nodata;
-        if(pmem_read) begin
+        if(rst) begin
+            mem_arr[0] <= mem_data0;
+            mem_arr[1] <= mem_data1;
+            mem_arr[2] <= mem_data2;
+            mem_arr[3] <= mem_data3;
+            mem_arr[4] <= mem_data4;
+            mem_arr[5] <= mem_data5;
+        end
+        else if(pmem_read | pmem_write) begin
             pmem_counter <= pmem_counter + 1;
         end
+
         if(pmem_counter == pmem_access_time && pmem_read) begin
             pmem_counter <= 0;
             pmem_resp <= 1'b1;
             case(pmem_address) 
-                mem_addr0: pmem_rdata <= mem_data0;
-                mem_addr1: pmem_rdata <= mem_data1;
-                mem_addr2: pmem_rdata <= mem_data2;
-                mem_addr3: pmem_rdata <= mem_data3;
-                mem_addr4: pmem_rdata <= mem_data4;
-                mem_addr5: pmem_rdata <= mem_data5;
+                mem_addr0: pmem_rdata <= mem_arr[0];
+                mem_addr1: pmem_rdata <= mem_arr[1];
+                mem_addr2: pmem_rdata <= mem_arr[2];
+                mem_addr3: pmem_rdata <= mem_arr[3];
+                mem_addr4: pmem_rdata <= mem_arr[4];
+                mem_addr5: pmem_rdata <= mem_arr[5];
+            endcase
+        end
+
+        if(pmem_counter == pmem_access_time && pmem_write) begin
+            pmem_counter <= 0;
+            pmem_resp <= 1'b1;
+            case (pmem_address)
+                mem_addr0: mem_arr[0] <= pmem_wdata;
+                mem_addr1: mem_arr[1] <= pmem_wdata;
+                mem_addr2: mem_arr[2] <= pmem_wdata;
+                mem_addr3: mem_arr[3] <= pmem_wdata;
+                mem_addr4: mem_arr[4] <= pmem_wdata;
+                mem_addr5: mem_arr[5] <= pmem_wdata;
             endcase
         end
     end
