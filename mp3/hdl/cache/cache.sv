@@ -32,6 +32,8 @@ logic load_mem_rdata;
 logic load_cache;
 logic load_plru;
 logic hit;
+logic dirty;
+logic [1:0] plru_way;
 
 cache_control control
 (

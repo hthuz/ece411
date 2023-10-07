@@ -11,11 +11,18 @@ module cache_datapath #(
     input load_mem_rdata, // from control
     input load_cache,
     input load_plru,
+    input load_dirty[4],
+    input mem_write,
     output logic [255:0] mem_rdata,
     input logic [31:0] mem_address,
+    input logic [255:0] mem_wdata,
     input logic [255:0] pmem_rdata,
     output logic [31:0] pmem_address,
-    output logic hit
+    output logic [255:0] pmem_wdata,
+    output logic hit,
+    output logic dirty,
+    // Way determined by plru to do choose and replace
+    output logic [1:0] plru_way
 );
 
     logic [4:0] offset;
@@ -23,11 +30,11 @@ module cache_datapath #(
     logic [22:0] tag;
 
 
-
     logic   [255:0] data_d [4];
     logic   [255:0] data_o [4];
     logic   valid_d [4];
     logic   valid_o [4];
+    logic   dirty_o [4];
     logic   hit_o [4];
     logic   [22:0] tag_o [4];
     logic   we [4];
@@ -40,6 +47,7 @@ module cache_datapath #(
 
     assign pmem_address = mem_address;
 
+    assign dirty = dirty_o[plru_way];
 
     genvar i;
     generate for (i = 0; i < 4; i++) begin : arrays
@@ -72,8 +80,25 @@ module cache_datapath #(
             .dout0      (valid_o[i])      // Read data
         ); 
 
+        ff_array dirty_array (
+            .clk0       (clk),
+            .rst0       (rst),
+            .csb0       (1'b0), // Chip select, active low
+            .web0       (~load_dirty[i]),     // Write enable, active low
+            .addr0      (index),
+            .din0       (1'b1), // Write data
+            .dout0      (dirty_o[i])      // Read data
+        ); 
 
-        assign data_d[i] = pmem_rdata;
+
+        always_comb begin
+            if(mem_write) begin
+                data_d[i] = mem_wdata;
+            end else begin
+                data_d[i] = pmem_rdata;
+                end
+        end
+
         assign tag_match[i] = (tag == tag_o[i]);
         assign hit_o[i] = tag_match[i] & valid_o[i];
 
@@ -85,10 +110,12 @@ module cache_datapath #(
             .addr(index),
             .hit_o(hit_o),
             .valid_o(valid_o),
+            .dirty_o(dirty_o),
             .load_cache(load_cache),
             .hit(hit),
             .load_plru(load_plru),
-            .we(we)
+            .we(we),
+            .dirty(dirty)
         );
 
     assign hit = hit_o[0] | hit_o[1] | hit_o[2] | hit_o[3];

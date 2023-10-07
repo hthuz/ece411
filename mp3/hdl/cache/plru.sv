@@ -8,9 +8,11 @@ module plru # (
     input [3:0] addr,
     input logic hit_o [4],
     input logic valid_o [4],
+    input logic dirty_o [4],
     input logic load_cache,
     input logic hit,
     input logic load_plru,
+    output [1:0] plru_way,
     output logic we [4]
 );
     localparam num_sets = 2**s_index;
@@ -65,26 +67,34 @@ module plru # (
 
     // When all sets are full
     function void do_replace_decision();
-        if(plru_array[addr][0] & plru_array[addr][1])
+        if(plru_array[addr][0] & plru_array[addr][1]) begin
             we[0] = 1'b1;
-        else if(plru_array[addr][0] & ~plru_array[addr][1])
+        end
+        else if(plru_array[addr][0] & ~plru_array[addr][1]) begin
             we[1] = 1'b1;
-        else if(~plru_array[addr][0] & plru_array[addr][2])
+        end
+        else if(~plru_array[addr][0] & plru_array[addr][2]) begin
             we[2] = 1'b1;
-        else 
+        end
+        else begin
             we[3] = 1'b1;
+        end
     endfunction
 
     // When some sets are empty
     function void do_find_empty();
-        if(~valid_o[0])
+        if(~valid_o[0]) begin
             we[0] = 1'b1;
-        else if(~valid_o[1])
+        end
+        else if(~valid_o[1]) begin
             we[1] = 1'b1;
-        else if(~valid_o[2])
+        end
+        else if(~valid_o[2]) begin
             we[2] = 1'b1;
-        else
+        end
+        else begin
             we[3] = 1'b1;
+        end
     endfunction
 
     always_ff @(posedge clk) begin
@@ -108,6 +118,38 @@ module plru # (
                 do_replace_decision();
             else
                 do_find_empty();
+        end
+    end
+
+    // Evaluate if cache is dirty
+    always_comb begin
+        if(need_replace) begin
+            if(plru_array[addr][0] & plru_array[addr][1]) begin
+                plru_way = 2'd0;
+            end
+            else if(plru_array[addr][0] & ~plru_array[addr][1]) begin
+                plru_way = 2'd1;
+            end
+            else if(~plru_array[addr][0] & plru_array[addr][2]) begin
+                plru_way = 2'd2;
+            end
+            else begin
+                plru_way = 2'd3;
+            end
+        end
+        else begin
+            if(~valid_o[0]) begin
+                plru_way = 2'd0;
+            end
+            else if(~valid_o[1]) begin
+                plru_way = 2'd1;
+            end
+            else if(~valid_o[2]) begin
+                plru_way = 2'd2;
+            end
+            else begin
+                plru_way = 2'd3;
+            end
         end
     end
 

@@ -9,10 +9,13 @@ module cache_control (
     output logic pmem_write,
 
     input logic hit,
+    input logic dirty,
+    input logic [1:0] plru_way,
 
     output logic load_mem_rdata,
     output logic load_cache, // On a miss load data from memory to cache
-    output logic load_plru
+    output logic load_plru,
+    output logic load_dirty[4]
 );
 
 
@@ -32,6 +35,11 @@ begin : state_actions
     pmem_read = 1'b0;
     mem_resp = 1'b0;
 
+    load_dirty[0] = 1'b0;
+    load_dirty[1] = 1'b0;
+    load_dirty[2] = 1'b0;
+    load_dirty[3] = 1'b0;
+
     case(state)
         s_idle: begin
         end
@@ -48,6 +56,7 @@ begin : state_actions
                 load_mem_rdata = 1'b1;
                 mem_resp = 1'b1;
                 load_plru = 1'b1;
+                load_dirty[plru_way] = 1'b1;
             end
         end
 
@@ -72,9 +81,9 @@ begin: next_state_logic
             if(hit)
                 next_state = s_idle;
             else begin
-                if(mem_read)
+                if(mem_read | (mem_write & ~dirty))
                     next_state = s_read_mem;
-                else if (mem_write)
+                else if (mem_write & dirty)
                     next_state = s_write_mem;
             end
         s_read_mem: 
