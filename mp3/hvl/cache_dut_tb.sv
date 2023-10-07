@@ -252,10 +252,32 @@ module cache_dut_tb;
         itf.read <= 1'b0;
     endtask : do_one_write
 
+    task do_two_write_on_same_addr();
+        itf.write <= 1'b1;
+        itf.addr <= mem_addr1;
+        itf.wdata <= mem_data2;
+        @(posedge clk iff itf.resp == 1'b1);
+        // Second write
+        itf.wdata <= mem_data3;
+        @(posedge clk iff itf.resp == 1'b1);
+        // Read
+        itf.write <= 1'b0;
+        itf.read <= 1'b1;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_data3)
+        else begin
+            $error("%0d: %0t: Write Wrong!", `__LINE__, $time);
+        end
+        itf.read <= 1'b0;
+
+
+    endtask : do_two_write_on_same_addr
+
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
-        do_one_write();
+        // do_one_write();
+        do_two_write_on_same_addr();
         $finish;
     end
 

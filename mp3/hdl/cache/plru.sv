@@ -11,6 +11,7 @@ module plru # (
     input logic load_cache,
     input logic hit,
     input logic load_plru,
+    input logic mem_write,
     output logic [1:0] plru_way,
     output logic we [4]
 );
@@ -117,6 +118,15 @@ module plru # (
                 do_replace_decision();
             else
                 do_find_empty();
+        end else if (mem_write & hit) begin
+            if(hit_o[0])
+                we[0] = 1'b1;
+            else if (hit_o[1]) 
+                we[1] = 1'b1;
+            else if (hit_o[2])
+                we[2] = 1'b1;
+            else if (hit_o[3])
+                we[3] = 1'b1;
         end
     end
 

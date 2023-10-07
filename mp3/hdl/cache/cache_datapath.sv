@@ -97,7 +97,7 @@ module cache_datapath #(
                 data_d[i] = mem_wdata;
             end else begin
                 data_d[i] = pmem_rdata;
-                end
+            end
         end
 
         assign tag_match[i] = (tag == tag_o[i]);
@@ -114,6 +114,7 @@ module cache_datapath #(
             .load_cache(load_cache),
             .hit(hit),
             .load_plru(load_plru),
+            .mem_write(mem_write),
             .we(we),
             .plru_way(plru_way)
         );
