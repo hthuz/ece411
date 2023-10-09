@@ -4,11 +4,28 @@ my_mp2test.s:
 .globl _start
 
 _start:
-    la x2, data2  # 0000
-    lw x3, data1  # 0004
-    sw x3, 0(x2)
-    # lw x3, data2
-    # lui x1, 100
+    la x1, data0  # 0000
+    la x2, data1 
+    la x3, data2
+    la x4, data3
+    la x5, data4
+
+    lw x6, wdata0
+    sw x6, 0(x1)
+
+    lw x6, wdata1
+    sw x6, 0(x2)
+    
+    lw x6, wdata2
+    sw x6, 0(x3)
+
+    lw x6, wdata3
+    sw x6,  0(x4)
+
+    lw x6, wdata4
+    sw x6, 0(x5)
+
+
 
 ready_halt:
     li  t0, 1
@@ -25,10 +42,22 @@ myhalt:                 # Infinite loop to keep the processor
                              # 4000 002C
             .fill 0x00000000 # 4000 0030
 data0:      .word 0x00000000 # At address 4000 0034
+            .fill 0x00040000 
 data1:      .word 0x11111111 # At address 4000 0038
+            .fill 0x00040000 
 data2:      .word 0x22222222 # At address 4000 004c
+            .fill 0x00040000 
 data3:      .word 0x33333333
+            .fill 0x00040000 
 data4:      .word 0x44444444
+
+
+wdata0:     .word 0xffff0000
+wdata1:     .word 0xffff1111
+wdata2:     .word 0xffff2222
+wdata3:     .word 0xffff3333
+wdata4:     .word 0xffff4444
+wdata5:     .word 0xffff5555
 
 
 .section ".tohost"

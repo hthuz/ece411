@@ -52,6 +52,7 @@ module cache_datapath #(
     always_comb begin
         if(pmem_write) begin
             pmem_address = {tag_o[plru_way],index, 5'b00000};
+            // pmem_address = {tag_o[plru_way], index, offset};
         end else begin
             // Bit 4:0 are offset. It should read one block at a time
             // This will make test with cache_dut_tb incompatible

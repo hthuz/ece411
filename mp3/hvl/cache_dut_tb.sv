@@ -306,6 +306,7 @@ module cache_dut_tb;
 
     task do_write_on_same_index();
         itf.write <= 1'b1;
+        itf.wmask <= 32'hffffffff;
 
         itf.wdata <= mem_wdata1;
         itf.addr <= mem_addr1;
@@ -363,9 +364,7 @@ module cache_dut_tb;
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
-        // do_read_hit_with_diff_offset();
-        do_two_reads_on_same_addr();
-        // do_two_reads_on_same_addr();
+        do_write_on_same_index();
         $finish;
     end
 
