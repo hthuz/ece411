@@ -56,6 +56,7 @@ module cache_datapath #(
             // Bit 4:0 are offset. It should read one block at a time
             // This will make test with cache_dut_tb incompatible
             pmem_address = {mem_address[31:5], 5'b00000};
+            // pmem_address = mem_address;
         end
     end
 
@@ -74,7 +75,7 @@ module cache_datapath #(
 
     always_comb begin
         data_mask = 32'hffffffff;
-        if(pmem_write)
+        if(load_mem_wdata)
             data_mask = mem_byte_enable;
     end
 

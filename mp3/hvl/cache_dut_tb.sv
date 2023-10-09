@@ -364,6 +364,7 @@ module cache_dut_tb;
         $display("Hello from mp3_cache_dut!");
         do_reset();
         // do_read_hit_with_diff_offset();
+        do_two_reads_on_same_addr();
         // do_two_reads_on_same_addr();
         $finish;
     end

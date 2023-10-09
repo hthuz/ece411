@@ -58,11 +58,11 @@ begin : state_actions
             pmem_read = 1'b1;
             if(pmem_resp) begin
                 load_cache = 1'b1;
-                load_mem_rdata = mem_read;
-                load_mem_wdata = mem_write;
-                dirty_value = mem_write;
-                mem_resp = 1'b1;
-                load_plru = 1'b1;
+                // load_mem_rdata = mem_read;
+                // load_mem_wdata = mem_write;
+                // dirty_value = mem_write;
+                // mem_resp = 1'b1;
+                // load_plru = 1'b1;
             end
         end
 
@@ -94,7 +94,7 @@ begin: next_state_logic
             end
         s_allocate: 
             if(pmem_resp)
-                next_state = s_idle;
+                next_state = s_check;
             else
                 next_state = s_allocate;
         s_write_back: 
