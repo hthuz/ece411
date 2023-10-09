@@ -16,6 +16,7 @@ module cache_datapath #(
     output logic [255:0] mem_rdata,
     input logic [31:0] mem_address,
     input logic [255:0] mem_wdata,
+    input logic [31:0] mem_byte_enable,
     input logic [255:0] pmem_rdata,
     input logic pmem_write,
     output logic [31:0] pmem_address,
@@ -73,7 +74,7 @@ module cache_datapath #(
             .clk0       (clk),
             .csb0       (1'b0), // Chip select, active low
             .web0       (~load_data[i]),     // Write enable, active low
-            .wmask0     (32'hffffffff),     // Write mask ,32 bits
+            .wmask0     (mem_byte_enable),     // Write mask ,32 bits
             .addr0      (index), 
             .din0       (data_d[i]), // Write data
             .dout0      (data_o[i])      // Read data
