@@ -13,6 +13,13 @@ module cache_dut_tb;
     parameter mem_addr4 = 32'h40038042;
     parameter mem_addr5 = 32'h40048042;
 
+    // Continous memory
+    parameter cmem_addr1 = 32'h40000800;
+    parameter cmem_addr2 = 32'h40000804;
+    parameter cmem_addr3 = 32'h40000808;
+
+    parameter cmem_data1 = 256'h1234;
+
     parameter mem_nodata = 256'hffff;
 
     parameter mem_data0 = 256'h0000;
@@ -129,13 +136,11 @@ module cache_dut_tb;
 
     task do_two_reads_on_same_addr();
         itf.read <= 1'b1;
-        itf.addr <= mem_addr0;
-        repeat (15) @(posedge clk);
-        itf.read <= 1'b0;
-        repeat (3) @(posedge clk);
-        itf.read <= 1'b1;
-        itf.addr <= mem_addr0;
-        assert(itf.rdata == mem_data0)
+        itf.addr <= mem_addr1;
+        @(posedge clk iff itf.resp == 1'b1);
+        // itf.addr <= mem_addr1;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_data1)
         else begin
             $error("%0d: %0t: Read mismatch!", `__LINE__, $time);
         end
@@ -241,6 +246,25 @@ module cache_dut_tb;
         repeat(8) @(posedge clk);
     endtask : do_reads_on_same_index
 
+    task do_read_hit_with_diff_offset();
+        itf.read <= 1'b1;
+        itf.addr <= cmem_addr1;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == cmem_data1)
+        else begin
+            $error("%0d: %0t: Read #1 mismatch!", `__LINE__, $time);
+        end
+
+        itf.addr <= cmem_addr2;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == cmem_data1)
+        else begin
+            $error("%0d: %0t: Read #2 mismatch!", `__LINE__, $time);
+        end
+        itf.read <= 1'b0;
+        repeat(5) @(posedge clk);
+    endtask : do_read_hit_with_diff_offset
+
     task do_one_write();
         // Address is no given until read/write starts
         // Before address is given, cache output is invalid
@@ -339,9 +363,8 @@ module cache_dut_tb;
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
-        // do_reads_on_same_index();
-        // do_write_on_same_index();
-        do_read_until_full_then_write();
+        do_read_hit_with_diff_offset();
+        // do_two_reads_on_same_addr();
         $finish;
     end
 
@@ -350,7 +373,7 @@ module cache_dut_tb;
     //----------------------------------------------------------------------
     // You likely want a process for pmem responses, like this:
     //----------------------------------------------------------------------
-    logic [255:0] mem_arr [6];
+    logic [255:0] mem_arr [7];
     always @(posedge clk) begin
 
         // Set pmem signals here to behaviorally model physical memory.
@@ -363,6 +386,7 @@ module cache_dut_tb;
             mem_arr[3] <= mem_data3;
             mem_arr[4] <= mem_data4;
             mem_arr[5] <= mem_data5;
+            mem_arr[6] <= cmem_data1;
         end
         else if(pmem_read | pmem_write) begin
             pmem_counter <= pmem_counter + 1;
@@ -378,6 +402,7 @@ module cache_dut_tb;
                 mem_addr3: pmem_rdata <= mem_arr[3];
                 mem_addr4: pmem_rdata <= mem_arr[4];
                 mem_addr5: pmem_rdata <= mem_arr[5];
+                cmem_addr1: pmem_rdata <= mem_arr[6];
             endcase
         end
 

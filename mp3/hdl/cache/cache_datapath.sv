@@ -42,6 +42,8 @@ module cache_datapath #(
     logic   load_data[4];
 
     logic   tag_match [4];
+    
+    logic   [31:0] data_mask;
 
     assign offset = mem_address[4:0];
     assign index = mem_address[8:5];
@@ -68,13 +70,19 @@ module cache_datapath #(
         end
     end
 
+    always_comb begin
+        data_mask = 32'hffffffff;
+        if(pmem_write)
+            data_mask = mem_byte_enable;
+    end
+
     genvar i;
     generate for (i = 0; i < 4; i++) begin : arrays
         mp3_data_array data_array (
             .clk0       (clk),
             .csb0       (1'b0), // Chip select, active low
             .web0       (~load_data[i]),     // Write enable, active low
-            .wmask0     (mem_byte_enable),     // Write mask ,32 bits
+            .wmask0     (data_mask),     // Write mask ,32 bits
             .addr0      (index), 
             .din0       (data_d[i]), // Write data
             .dout0      (data_o[i])      // Read data
@@ -118,7 +126,13 @@ module cache_datapath #(
             end
         end
 
-        assign tag_match[i] = (tag == tag_o[i]);
+        // assign tag_match[i] = (tag == tag_o[i]);
+        always_comb begin
+            if(tag == tag_o[i])
+                tag_match[i] = 1'b1;
+            else
+                tag_match[i] = 1'b0;
+        end
         assign hit_o[i] = tag_match[i] & valid_o[i];
 
     end endgenerate

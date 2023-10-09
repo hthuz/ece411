@@ -9,7 +9,8 @@ module top_tb;
 
     bit rst;
 
-    int timeout = 10000000; //in cycles, change according to your needs
+    // int timeout = 10000000; //in cycles, change according to your needs
+    int timeout = 500;
 
     bmem_itf bmem_itf(.*);
     cache_itf cache_itf(.*);
