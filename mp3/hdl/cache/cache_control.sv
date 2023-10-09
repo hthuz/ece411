@@ -48,6 +48,7 @@ begin : state_actions
             if(mem_write) begin
                 load_mem_wdata = hit;
                 load_cache = hit;
+                dirty_value = hit;
             end
             mem_resp = hit;
             load_plru = hit;
