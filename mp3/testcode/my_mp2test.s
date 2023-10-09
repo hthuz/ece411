@@ -4,11 +4,11 @@ my_mp2test.s:
 .globl _start
 
 _start:
-    # la x2, data2
-    # lw x3, data1
+    # la x2, data1
+    lw x3, data1
     # sw x3, 0(x2)
     # lw x3, data2
-    lui x1, 100
+    # lui x1, 100
 
 ready_halt:
     li  t0, 1
