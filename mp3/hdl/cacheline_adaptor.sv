@@ -68,6 +68,18 @@ always_comb begin
     read_o = 1'b0;
     write_o = 1'b0;
     resp_o = 1'b0;
+    line_o = '0;
+    burst_o = '0;
+    buffered_read[0] = '0;
+    buffered_read[1] = '0;
+    buffered_read[2] = '0;
+    buffered_read[3] = '0;
+    buffered_write[0] = '0;
+    buffered_write[1] = '0;
+    buffered_write[2] = '0;
+    buffered_write[3] = '0;
+    
+    next_state = state;
     unique case(state)
         s_wait:
             if (read_i)
