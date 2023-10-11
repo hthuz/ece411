@@ -155,6 +155,7 @@ module cache_datapath #(
     assign hit = hit_o[0] | hit_o[1] | hit_o[2] | hit_o[3];
     // Select valid data to mem_rdata
     always_comb begin
+        mem_rdata = '0;
         if(load_mem_rdata) begin
             if(hit_o[0])
                 mem_rdata = data_o[0];
@@ -172,6 +173,7 @@ module cache_datapath #(
     end
 
     always_comb begin
+        pmem_wdata = '0;
         if(pmem_write) begin
             pmem_wdata = data_o[plru_way];
         end
