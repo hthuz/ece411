@@ -33,6 +33,8 @@ logic [2:0] read_burst_num;
 int write_burst_num;
 logic [63:0] buffered_read[4];
 logic [63:0] buffered_write[4];
+logic [63:0] buffered_read_in[4];
+logic [63:0] buffered_write_in[4];
 
 enum logic [2:0] {
     s_wait,
@@ -41,6 +43,13 @@ enum logic [2:0] {
     s_write,     // Write from LLC to cacheline 
     s_write_send // Send to memory
 } state, next_state;
+
+always_ff @(posedge clk) begin
+    for(int i = 0; i < 4; i++) begin
+        buffered_write[i] <= buffered_write_in[i];
+        buffered_read[i] <= buffered_read_in[i];
+    end
+end
 
 always_ff @(posedge clk, negedge reset_n) begin
     if(~reset_n) begin
@@ -71,6 +80,11 @@ always_comb begin
 
     line_o = '0;
     burst_o = '0;
+
+    for(int i = 0; i < 4; i++) begin
+        buffered_read_in[i] = buffered_read[i];
+        buffered_write_in[i] = buffered_write[i];
+    end
 
     next_state = state;
     unique case(state)
@@ -104,7 +118,7 @@ always_comb begin
         s_read: begin
             read_o = 1'b1;
             if(resp_i) begin
-                buffered_read[read_burst_num] = burst_i;
+                buffered_read_in[read_burst_num] = burst_i;
             end
         end
         s_read_send: begin
@@ -112,10 +126,10 @@ always_comb begin
             line_o = {buffered_read[3],buffered_read[2],buffered_read[1],buffered_read[0]};
         end
         s_write: begin
-            buffered_write[0] = line_i[63:0];
-            buffered_write[1] = line_i[127:64];
-            buffered_write[2] = line_i[191:128];
-            buffered_write[3] = line_i[255:192];
+            buffered_write_in[0] = line_i[63:0];
+            buffered_write_in[1] = line_i[127:64];
+            buffered_write_in[2] = line_i[191:128];
+            buffered_write_in[3] = line_i[255:192];
         end
         s_write_send: begin
             write_o = 1'b1;
