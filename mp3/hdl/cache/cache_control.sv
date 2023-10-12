@@ -10,7 +10,6 @@ module cache_control (
 
     input logic hit,
     input logic dirty,
-    input logic [1:0] plru_way,
 
     output logic load_mem_rdata,
     output logic load_mem_wdata,

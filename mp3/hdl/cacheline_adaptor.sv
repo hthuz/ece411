@@ -54,18 +54,18 @@ end
 always_ff @(posedge clk, negedge reset_n) begin
     if(~reset_n) begin
         state <= s_wait;
-        read_burst_num <= 0;
+        read_burst_num <= 3'b0;
         write_burst_num <= 0;
     end
     else begin
         state <= next_state;
         if(resp_i && state == s_read)
-            read_burst_num <= read_burst_num + 1;
+            read_burst_num <= read_burst_num + 1'b1;
         if(state == s_read_send) begin
-            read_burst_num <= 0;
+            read_burst_num <= 3'b0;
         end
         if(resp_i && state == s_write_send)
-            write_burst_num <= write_burst_num + 1;
+            write_burst_num <= write_burst_num + 1'b1;
         if(state == s_write)
             write_burst_num <= 0;
     end
