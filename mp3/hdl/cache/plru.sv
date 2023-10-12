@@ -20,7 +20,7 @@ module plru # (
     assign test_plru_entry = plru_array[2];
 
 
-    assign need_replace = valid_o[0] & valid_o[1] & valid_o[2] & valid_o[3];
+    // assign need_replace = valid_o[0] & valid_o[1] & valid_o[2] & valid_o[3];
 
     function void update_lru();
         if(hit) begin
@@ -77,44 +77,56 @@ module plru # (
     // Evaluate if cache is dirty
     always_comb begin
         plru_way = '0;
-        if(hit) begin
-            if(hit_o[0])
-                plru_way = 2'b00;
-            else if (hit_o[1])
-                plru_way = 2'b01;
-            else if (hit_o[2])
-                plru_way = 2'b10;
-            else if (hit_o[3])
-                plru_way = 2'b11;
+        if(plru_array[addr][0] & plru_array[addr][1]) begin
+            plru_way = 2'b00;
         end
-        else if(need_replace) begin
-            if(plru_array[addr][0] & plru_array[addr][1]) begin
-                plru_way = 2'b00;
-            end
-            else if(plru_array[addr][0] & ~plru_array[addr][1]) begin
-                plru_way = 2'b01;
-            end
-            else if(~plru_array[addr][0] & plru_array[addr][2]) begin
-                plru_way = 2'b10;
-            end
-            else begin
-                plru_way = 2'b11;
-            end
+        else if (plru_array[addr][0] & ~plru_array[addr][1]) begin
+            plru_way = 2'b01;
         end
-        else begin
-            if(~valid_o[0]) begin
-                plru_way = 2'b00;
-            end
-            else if(~valid_o[1]) begin
-                plru_way = 2'b01;
-            end
-            else if(~valid_o[2]) begin
-                plru_way = 2'b10;
-            end
-            else begin
-                plru_way = 2'b11;
-            end
+        else if (~plru_array[addr][0] & plru_array[addr][2]) begin
+            plru_way = 2'b10;
+        end 
+        else if (~plru_array[addr][0] & ~plru_array[addr][2]) begin
+            plru_way = 2'b11;
         end
+        // if(hit) begin
+        //     if(hit_o[0])
+        //         plru_way = 2'b00;
+        //     else if (hit_o[1])
+        //         plru_way = 2'b01;
+        //     else if (hit_o[2])
+        //         plru_way = 2'b10;
+        //     else if (hit_o[3])
+        //         plru_way = 2'b11;
+        // end
+        // else if(need_replace) begin
+        //     if(plru_array[addr][0] & plru_array[addr][1]) begin
+        //         plru_way = 2'b00;
+        //     end
+        //     else if(plru_array[addr][0] & ~plru_array[addr][1]) begin
+        //         plru_way = 2'b01;
+        //     end
+        //     else if(~plru_array[addr][0] & plru_array[addr][2]) begin
+        //         plru_way = 2'b10;
+        //     end
+        //     else begin
+        //         plru_way = 2'b11;
+        //     end
+        // end
+        // else begin
+        //     if(~valid_o[0]) begin
+        //         plru_way = 2'b00;
+        //     end
+        //     else if(~valid_o[1]) begin
+        //         plru_way = 2'b01;
+        //     end
+        //     else if(~valid_o[2]) begin
+        //         plru_way = 2'b10;
+        //     end
+        //     else begin
+        //         plru_way = 2'b11;
+        //     end
+        // end
     end
 
 

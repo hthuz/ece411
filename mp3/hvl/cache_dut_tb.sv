@@ -320,21 +320,65 @@ module cache_dut_tb;
         itf.wdata <= mem_wdata4;
         itf.addr <= mem_addr4;
         @(posedge clk iff itf.resp == 1'b1);
-        // Write back should happen
+        // Write back should happen, replace way A
         itf.addr <= mem_addr5;
         itf.wdata <= mem_wdata5;
         @(posedge clk iff itf.resp == 1'b1);
 
         itf.write <= 1'b0;
+        // Replace way C
         itf.read <= 1'b1;
         // Read miss
         itf.addr <= mem_addr1;
         @(posedge clk iff itf.resp == 1'b1);
-        itf.read <= 1'b0;
         assert(itf.rdata == mem_wdata1)
         else begin
             $error("%0d: %0t: Read mismatch!", `__LINE__, $time);
         end
+
+        // Replace way B
+        // Read miss 
+        itf.addr <= mem_addr3;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_wdata3)
+        else begin
+            $error("%0d: %0t: Read mismatch!", `__LINE__, $time);
+        end
+
+        // Replace way D
+        itf.addr <= mem_addr2;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_wdata2)
+        else begin
+            $error("%0d: %0t: Read mismatch!", `__LINE__, $time);
+        end
+
+        // Replace way A
+        itf.addr <= mem_addr4;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_wdata4)
+        else begin
+            $error("%0d: %0t: Read mismatch!", `__LINE__, $time);
+        end
+
+        // Replace way C. No write back
+        itf.addr <= mem_addr5;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_wdata5)
+        else begin
+            $error("%0d: %0t: Read mismatch!", `__LINE__, $time);
+        end
+
+        // Read hit
+        itf.addr <= mem_addr4;
+        @(posedge clk iff itf.resp == 1'b1);
+        assert(itf.rdata == mem_wdata4)
+        else begin
+            $error("%0d: %0t: Read mismatch!", `__LINE__, $time);
+        end
+        itf.read = 1'b0;
+
+
         repeat(10) @(posedge clk);
     endtask : do_write_on_same_index
 
@@ -357,13 +401,13 @@ module cache_dut_tb;
         @(posedge clk iff itf.resp == 1'b1);
         itf.write <= 1'b0;
         repeat(15) @(posedge clk);
-
-
-
     endtask : do_read_until_full_then_write
+
     initial begin
         $display("Hello from mp3_cache_dut!");
         do_reset();
+        // do_reads_on_same_index();
+        // do_read_until_full_then_write();
         do_write_on_same_index();
         $finish;
     end
