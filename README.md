@@ -1,4 +1,4 @@
-# ECE 411 (fa23) repo for NetID: hz66
+# ECE 411 (fa23) repo 
 
 GitHub username at initialization time: hthuz
 
